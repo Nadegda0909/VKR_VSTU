@@ -13,11 +13,11 @@ workbook = load_workbook(filename='ОН_ФЭВТ_1 курс.xlsx')
 # Получение активного листа
 sheet = workbook.active
 
-db = PostgreSQLDatabase(host="localhost",
+db = PostgreSQLDatabase(host="77.232.142.197",
                         port="5432",
-                        user='sergey',
-                        password='Serez_Groza_1337',
-                        database="vkr")
+                        user='nadea',
+                        password='Nadea',
+                        database="postgres")
 
 
 def move_work_zone_down(work_zone):

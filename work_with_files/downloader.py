@@ -71,9 +71,7 @@ def download_schedule_files(main_url='https://www.vstu.ru/student/raspisaniya/za
     print("Загрузка завершена.")
 
 
-
-
-def convert_xls_to_xlsx(input_folder, output_folder):
+def convert_xls_to_xlsx(input_folder="downloaded_files", output_folder="converted_files"):
     """
     Конвертирует все файлы формата XLS в XLSX и перемещает все файлы формата XLSX в указанной папке.
 
