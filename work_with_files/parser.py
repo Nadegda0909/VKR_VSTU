@@ -187,8 +187,15 @@ def analyze_dates():
                         dates.update({month_dict[row]: work_cell.value})
                         current_month = month_names.get(month_dict[row])
                         date = f'2024-{current_month}-{work_cell.value}'
-                        query = "INSERT INTO dates (date, week_day, week_num) VALUES (%s, %s, %s)"
-                        db.execute_query(query, (date, week_day, num_week))
+                        query = """
+                            INSERT INTO dates (date, week_day, week_num)
+                            SELECT %s, %s, %s
+                            WHERE NOT EXISTS (
+                                SELECT 1 FROM dates WHERE date = %s AND week_day = %s AND week_num = %s
+                            )
+                        """
+                        db.execute_query(query, (date, week_day, num_week, date, week_day, num_week))
+
                     work_cell = move_cell_right(work_cell)
                 work_cell = move_cell_left_to_default(work_cell)
                 work_cell = move_cell_down(work_cell)
@@ -257,10 +264,14 @@ def analyze_worksheet():
                     for date in dates:
                         insert_query = """
                             INSERT INTO lessons (group_name, lesson_order, is_busy, lesson_date)
-                            VALUES (%s, %s, %s, %s)
-                            """
-                        # Здесь вы можете указать нужный порядковый номер пары, значение для is_busy и т. д.
-                        values = (group_name, number_para, has_lesson, date[0])  # Предположим, что lesson_order = 1
+                            SELECT %s, %s, %s, %s
+                            WHERE NOT EXISTS (
+                                SELECT 1 FROM lessons 
+                                WHERE group_name = %s AND lesson_order = %s AND lesson_date = %s
+                            )
+                        """
+                        values = (group_name, number_para, has_lesson, date[0], group_name, number_para, date[0])
+
                         # и is_busy = False
                         db.execute_query(insert_query, values)
                     print("_________________________")
