@@ -198,23 +198,6 @@ def analyze_dates():
     db.disconnect()
 
 
-def fill_lessons_table(week_num, week_day, group_name):
-    # Выбираем даты из таблицы dates по номеру недели и дню недели
-    query = "SELECT date FROM dates WHERE week_num = %s AND week_day = %s"
-    dates = db.execute_query(query, (week_num, week_day))
-
-    # Для каждой выбранной даты вставляем записи в таблицу lessons
-    for date in dates:
-        # Выполняем вставку записи для каждой группы
-        insert_query = """
-        INSERT INTO lessons (group_name, lesson_order, is_busy, lesson_date)
-        VALUES (%s, %s, %s, %s)
-        """
-        # Здесь вы можете указать нужный порядковый номер пары, значение для is_busy и т. д.
-        values = (group_name, 1, False, date[0])  # Предположим, что lesson_order = 1 и is_busy = False
-        db.execute_query(insert_query, values)
-
-
 def analyze_worksheet():
     db.connect()
     # Определение "рабочей зоны" (тут группа ячеек 4 на 3, в которой вся инфа для 1 пары 1 группы)
