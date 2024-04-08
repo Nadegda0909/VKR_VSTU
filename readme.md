@@ -54,29 +54,10 @@
 | 1         |  ивт-160   |      1       |  false  | 2024-02-12  |
 | 10        |  ивт-160   |      2       |  true   | 2024-02-12  |
 
-
+#### ER-диаграмма
 ```mermaid
-classDiagram
-direction BT
-class dates {
-   integer week_day
-   integer week_num
-   date date
-}
-class groups {
-   varchar(100) faculty
-   integer course
-   varchar(100) group_name
-}
-class lessons {
-   varchar(100) group_name
-   integer lesson_order
-   boolean is_busy
-   date lesson_date
-   integer lesson_id
-}
-lessons  -->  dates : lesson_date
-lessons  -->  groups : group_name
+erDiagram
+    groups ||--o{ lessons : "group_name"
+    dates ||--o{ lessons : "lesson_date"
 ```
-
 
