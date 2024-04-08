@@ -147,18 +147,18 @@ def move_cell_left_to_default(cell):
 def analyze_dates():
     db.connect()
     month_names = {
-        "Январь": "01",
-        "Февраль": "02",
-        "Март": "03",
-        "Апрель": "04",
-        "Май": "05",
-        "Июнь": "06",
-        "Июль": "07",
-        "Август": "08",
-        "Сентябрь": "09",
-        "Октябрь": "10",
-        "Ноябрь": "11",
-        "Декабрь": "12"
+        "январь": "01",
+        "февраль": "02",
+        "март": "03",
+        "апрель": "04",
+        "май": "05",
+        "июнь": "06",
+        "июль": "07",
+        "август": "08",
+        "сентябрь": "09",
+        "октябрь": "10",
+        "ноябрь": "11",
+        "декабрь": "12"
     }
     # названия месяцев
     month_dict = {}
@@ -168,7 +168,7 @@ def analyze_dates():
     work_cell = sheet['A6']
     # для записи в словарик названий месяцев
     for row in range(1, 5 + 1):
-        month_dict.update({row: work_cell.value})
+        month_dict.update({row: work_cell.value.lower()})
         work_cell = move_cell_right(work_cell)
 
     # ставим ячейку на начало дат
@@ -232,7 +232,7 @@ def analyze_worksheet():
                     SELECT 1 FROM groups WHERE group_name = %s
                 )
             """
-            db.execute_query(insert_query, (group_name, "ФЭВТ", "1", group_name))
+            db.execute_query(insert_query, (group_name, "ФЭВТ", "2", group_name))
 
             # Цикл для прохода по всей неделе
             for week_day in range(1, 6 + 1):
