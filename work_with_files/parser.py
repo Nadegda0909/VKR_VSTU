@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 
 from openpyxl import load_workbook
@@ -13,11 +14,43 @@ workbook = load_workbook(filename='ОН_ФЭВТ_2 курс.xlsx')
 # Получение активного листа
 sheet = workbook.active
 
-db = PostgreSQLDatabase(host="77.232.142.197",
+db = PostgreSQLDatabase(host="localhost",
                         port="5432",
-                        user='nadea',
-                        password='Nadea',
+                        user='sergey',
+                        password='Serez_Groza_1337',
                         database="postgres")
+
+
+def find_1_2_cell():
+    value_to_find = "1-2"
+    # Проходимся по всем ячейкам и ищем нужное значение
+    for row in sheet.iter_rows():
+        for cell in row:
+            # Удаляем пробелы и проверяем наличие значения
+            if cell.value and str(cell.value).replace(" ", "") == value_to_find:
+                return cell.coordinate
+
+    # Если значение не найдено, возвращаем None
+    return None
+
+
+def create_work_zone():
+    # Получаем координаты начальной ячейки
+    start_col, start_row = coordinate_to_tuple(find_1_2_cell())
+
+    start_col += 1
+
+    # Смещаемся на 4 ячейки вправо
+    end_col = start_col + 3
+
+    # Создаем адреса начальной и конечной ячеек для рабочей зоны
+    start_cell = f"{get_column_letter(start_col)}{start_row}"
+    end_cell = f"{get_column_letter(end_col)}{start_row + 2}"
+
+    # Получаем рабочую зону
+    work_zone = sheet[start_cell:end_cell]
+
+    return work_zone
 
 
 def move_work_zone_down(work_zone):
@@ -206,15 +239,16 @@ def analyze_dates():
 
 
 def analyze_worksheet():
+    analyze_dates()
     db.connect()
     # Определение "рабочей зоны" (тут группа ячеек 4 на 3, в которой вся инфа для 1 пары 1 группы)
-    work_zone = sheet['H7':'K9']
+    work_zone = create_work_zone()
 
     # Словарь для групп (нужен для того, чтобы знать в какой колонке, какая группа)
     groups_dict = {}
 
     for num_week in range(1, 2 + 1):
-        print(num_week)
+        # print(num_week)
         # Цикл для прохода по одной группе
         for number_group in range(10):
             # Название группы (Например прин-166)
@@ -223,6 +257,8 @@ def analyze_worksheet():
                 groups_dict.update({number_group: group_name})
             else:
                 group_name = groups_dict[number_group]
+            if group_name == 'none':
+                continue
             print(Fore.GREEN + f'Название группы: {group_name}' + Style.RESET_ALL)
             # Добавить в бд название группы
             insert_query = """
@@ -239,7 +275,7 @@ def analyze_worksheet():
                 print(f"День недели: {week_day}")
                 # Цикл для прохода по одному дню
                 for number_para in range(1, 6 + 1):
-                    print(f'Номер пары: {number_para}')
+                    # print(f'Номер пары: {number_para}')
                     # Цикл для прохода по одной паре
                     has_lesson = False
                     for row in work_zone:
@@ -250,10 +286,10 @@ def analyze_worksheet():
                             if check_cell_has_data(cell):
                                 has_lesson = True
                                 break
-                        #     print(f'Значение в ячейке: {cell.value}')
-                        # print("-------")
+                    #     print(f'Значение в ячейке: {cell.value}')
+                    # print("-------")
 
-                    print(f'Есть ли занятие: {has_lesson}')
+                    # print(f'Есть ли занятие: {has_lesson}')
                     # Выбираем даты из таблицы dates по номеру недели и дню недели
                     query = "SELECT date FROM dates WHERE week_num = %s AND week_day = %s"
                     dates = db.execute_query(query, (num_week, week_day))
@@ -284,5 +320,6 @@ def analyze_worksheet():
 
 
 if __name__ == '__main__':
-    analyze_dates()
+    t = time.time()
     analyze_worksheet()
+    print("--- %s seconds ---" % (time.time() - t))
