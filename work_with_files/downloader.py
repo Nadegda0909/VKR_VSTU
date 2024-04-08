@@ -32,6 +32,7 @@ def download_schedule_files(main_url='https://www.vstu.ru/student/raspisaniya/za
         # Формируем полный URL для текущей категории
         category_url = urljoin(main_url, link['href'])
 
+
         if 'h3' in link.find_parents():
             # Если ссылка находится внутри h3, создаем папку в основной папке
             category_output_folder = os.path.join(output_folder, link.text)
@@ -40,11 +41,13 @@ def download_schedule_files(main_url='https://www.vstu.ru/student/raspisaniya/za
         else:
             # Если ссылка находится внутри h4, создаем папку в соответствующей папке категории
             category_output_folder = os.path.join(output_folder, link.find_previous('h3').text, link.text)
+            if "Аспирантура" in category_output_folder: continue
+            if "Вечерний" in category_output_folder: continue
             # Создаем папку, если она еще не существует
             os.makedirs(category_output_folder, exist_ok=True)
 
         # Выводим информацию о текущей категории
-        # print(f"Обрабатываем категорию: {link.text}")
+        print(f"Обрабатываем категорию: {link.text}")
 
         # Получаем HTML-код страницы текущей категории
         category_response = requests.get(category_url)  # Выполнение GET-запроса к странице категории
@@ -59,6 +62,7 @@ def download_schedule_files(main_url='https://www.vstu.ru/student/raspisaniya/za
                 # Скачиваем файл
                 file_name = os.path.join(category_output_folder,
                                          os.path.basename(file_url))  # Формируем путь для сохранения файла
+                if "1 курс" in file_name or "1курс" in file_name: continue
                 file_response = requests.get(file_url)  # Выполнение GET-запроса для скачивания файла
 
                 # Сохраняем файл на диск
