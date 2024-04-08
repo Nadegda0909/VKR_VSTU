@@ -32,7 +32,6 @@ def download_schedule_files(main_url='https://www.vstu.ru/student/raspisaniya/za
         # Формируем полный URL для текущей категории
         category_url = urljoin(main_url, link['href'])
 
-
         if 'h3' in link.find_parents():
             # Если ссылка находится внутри h3, создаем папку в основной папке
             category_output_folder = os.path.join(output_folder, link.text)

@@ -8,7 +8,7 @@ from colorama import init, Fore, Style
 # Инициализация colorama (необходимо вызывать один раз в начале программы)
 init()
 # Загрузка файла Excel
-workbook = load_workbook(filename='ОН_ФЭВТ_1 курс.xlsx')
+workbook = load_workbook(filename='ОН_ФЭВТ_2 курс.xlsx')
 
 # Получение активного листа
 sheet = workbook.active
