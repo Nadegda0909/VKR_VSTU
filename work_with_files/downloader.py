@@ -40,8 +40,8 @@ def download_schedule_files(main_url='https://www.vstu.ru/student/raspisaniya/za
         else:
             # Если ссылка находится внутри h4, создаем папку в соответствующей папке категории
             category_output_folder = os.path.join(output_folder, link.find_previous('h3').text, link.text)
-            if "Аспирантура" in category_output_folder: continue
-            if "Вечерний" in category_output_folder: continue
+            if "Аспирантура" in category_output_folder or "Вечерний" in category_output_folder:
+                continue
             # Создаем папку, если она еще не существует
             os.makedirs(category_output_folder, exist_ok=True)
 
@@ -61,7 +61,8 @@ def download_schedule_files(main_url='https://www.vstu.ru/student/raspisaniya/za
                 # Скачиваем файл
                 file_name = os.path.join(category_output_folder,
                                          os.path.basename(file_url))  # Формируем путь для сохранения файла
-                if "1 курс" in file_name or "1курс" in file_name: continue
+                if "1 курс" in file_name:
+                    continue
                 file_response = requests.get(file_url)  # Выполнение GET-запроса для скачивания файла
 
                 # Сохраняем файл на диск
@@ -102,7 +103,7 @@ def convert_xls_to_xlsx(input_folder="downloaded_files", output_folder="converte
                 # Если файл XLS, то конвертируем его в формат XLSX
                 output_file_path = os.path.join(new_root, f"{file_name}.xlsx")
                 x2x = XLS2XLSX(input_file_path)
-                wb = x2x.to_xlsx(output_file_path)
+                x2x.to_xlsx(output_file_path)
                 # Выводим информацию о конвертированном файле
                 # print(f"Конвертирован файл: {input_file_path} -> {output_file_path}")
             elif file_extension.lower() == '.xlsx':

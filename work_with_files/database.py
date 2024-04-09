@@ -1,4 +1,7 @@
 import psycopg2
+from colorama import init, Fore, Style
+
+init()
 
 
 class PostgreSQLDatabase:
@@ -21,7 +24,7 @@ class PostgreSQLDatabase:
             )
             print("Connected to PostgreSQL")
         except (Exception, psycopg2.DatabaseError) as error:
-            print("Error while connecting to PostgreSQL:", error)
+            print(Fore.RED, "Error while connecting to PostgreSQL:", error, Style.RESET_ALL)
 
     def execute_query(self, query, args=None):
         try:
@@ -39,7 +42,7 @@ class PostgreSQLDatabase:
                 self.connection.commit()
                 cursor.close()
         except (Exception, psycopg2.DatabaseError) as error:
-            print("Error while executing query:", error)
+            print(Fore.RED, "Error while executing query:", error, Style.RESET_ALL)
 
     def disconnect(self):
         if self.connection is not None:
@@ -48,3 +51,11 @@ class PostgreSQLDatabase:
             print("Disconnected from PostgreSQL")
         else:
             print("No connection to PostgreSQL")
+
+    def truncate_table(self, table_name):
+        try:
+            query = f"TRUNCATE TABLE {table_name} CASCADE;"
+            self.execute_query(query)
+            print(f"All data deleted from the table {table_name}")
+        except (Exception, psycopg2.DatabaseError) as error:
+            print(f"{Fore.RED}Error while truncating table {table_name}: {error} {Style.RESET_ALL}")

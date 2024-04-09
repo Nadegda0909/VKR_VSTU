@@ -1,14 +1,12 @@
 from typing import Annotated
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastui import FastUI, AnyComponent, prebuilt_html, components as c
-from fastui.components import FireEvent
-from fastui.components.display import DisplayMode, DisplayLookup
+from fastui.components.display import DisplayLookup
 from fastui.events import GoToEvent, BackEvent
 from fastui.forms import fastui_form
-from pydantic import BaseModel, Field
-from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -23,7 +21,7 @@ class AddUser(BaseModel):
 
 
 users = [User(id=1, name="Sergey"),
-         User(id=2, name="Nadea")]
+         User(id=2, name="Nadya")]
 
 
 @app.get("/api/", response_model=FastUI, response_model_exclude_none=True)
@@ -62,10 +60,12 @@ def add_user():
         )
     ]
 
+
 @app.post("/api/deleteUser/{id}", response_model=FastUI, response_model_exclude_none=True)
 def delete_user(id):
     users.pop(users.index(id))
     return [c.FireEvent(event=GoToEvent(url="/"))]
+
 
 @app.get("/api/user/{user_id}/", response_model=FastUI, response_model_exclude_none=True)
 def get_user(user_id: int):
@@ -81,6 +81,7 @@ def get_user(user_id: int):
             ]
         )
     ]
+
 
 @app.get('/{path:path}')
 async def html_landing() -> HTMLResponse:
