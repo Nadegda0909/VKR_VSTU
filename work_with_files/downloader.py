@@ -3,6 +3,8 @@ import requests  # Импорт модуля для выполнения HTTP-з
 from bs4 import BeautifulSoup  # Импорт модуля для парсинга HTML
 from urllib.parse import urljoin  # Импорт функции для объединения URL-адресов
 from shutil import move
+
+from colorama import Style, Fore
 from xls2xlsx import XLS2XLSX
 
 
@@ -72,7 +74,7 @@ def download_schedule_files(main_url='https://www.vstu.ru/student/raspisaniya/za
                 # Выводим информацию о скачанном файле
                 # print(f"Скачан файл: {file_name}")
 
-    print("Загрузка завершена.")
+    print(f"{Fore.GREEN}Загрузка завершена. {Style.RESET_ALL}")
 
 
 def convert_xls_to_xlsx(input_folder="downloaded_files", output_folder="converted_files"):
@@ -105,11 +107,11 @@ def convert_xls_to_xlsx(input_folder="downloaded_files", output_folder="converte
                 x2x = XLS2XLSX(input_file_path)
                 x2x.to_xlsx(output_file_path)
                 # Выводим информацию о конвертированном файле
-                # print(f"Конвертирован файл: {input_file_path} -> {output_file_path}")
+                print(f"Конвертирован файл: {input_file_path.split('/')[-1]} -> {output_file_path.split('/')[-1]}")
             elif file_extension.lower() == '.xlsx':
                 # Если файл XLSX, просто перемещаем его в новую папку
                 output_file_path = os.path.join(new_root, file)
                 move(input_file_path, output_file_path)
                 # Выводим информацию о перемещенном файле
-                # print(f"Перемещен файл: {input_file_path} -> {output_file_path}")
-    print("Конвертация завершена")
+                print(f"Перемещен файл: {input_file_path.split('/')[-1]}")
+    print(f"{Fore.GREEN}Конвертация завершена. {Style.RESET_ALL}")

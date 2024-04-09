@@ -22,7 +22,7 @@ class PostgreSQLDatabase:
                 password=self.password,
                 database=self.database
             )
-            print("Connected to PostgreSQL")
+            print(f"{Fore.CYAN}Connected to PostgreSQL{Style.RESET_ALL}")
         except (Exception, psycopg2.DatabaseError) as error:
             print(Fore.RED, "Error while connecting to PostgreSQL:", error, Style.RESET_ALL)
 
@@ -48,14 +48,14 @@ class PostgreSQLDatabase:
         if self.connection is not None:
             self.connection.close()
             self.connection = None
-            print("Disconnected from PostgreSQL")
+            print(f"{Fore.CYAN}Disconnected from PostgreSQL{Style.RESET_ALL}")
         else:
-            print("No connection to PostgreSQL")
+            print(f"{Fore.LIGHTRED_EX}No connection to PostgreSQL{Style.RESET_ALL}")
 
     def truncate_table(self, table_name):
         try:
             query = f"TRUNCATE TABLE {table_name} CASCADE;"
             self.execute_query(query)
-            print(f"All data deleted from the table {table_name}")
+            print(f"{Fore.CYAN}All data deleted from the table {table_name}{Style.RESET_ALL}")
         except (Exception, psycopg2.DatabaseError) as error:
             print(f"{Fore.RED}Error while truncating table {table_name}: {error} {Style.RESET_ALL}")

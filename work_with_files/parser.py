@@ -172,8 +172,8 @@ def move_cell_to_leftmost(cell):
     return new_cell
 
 
-def analyze_dates(filename='../converted_files/Бакалавриат, специалитет/Факультет электроники и '
-                           'вычислительной техники/ОН_ФЭВТ_2 курс.xlsx'):
+def analyze_dates(filename='./converted_files/Бакалавриат, специалитет/Факультет электроники и вычислительной '
+                           'техники/ОН_ФЭВТ_2 курс.xlsx'):  # его берем за эталон
     # Загрузка файла Excel
     workbook = load_workbook(filename=filename)
 
@@ -218,7 +218,7 @@ def analyze_dates(filename='../converted_files/Бакалавриат, спец�
                 for row in range(1, 5 + 1):
                     # проверяем, что в строке число
                     if work_cell.value is not None and isinstance(work_cell.value, int) and work_cell.value > 0:
-                        print(work_cell.value)
+                        # print(work_cell.value)
                         dates.update({month_dict[row]: work_cell.value})
                         current_month = month_names.get(month_dict[row])
                         date = f'2024-{current_month}-{work_cell.value}'
@@ -234,9 +234,10 @@ def analyze_dates(filename='../converted_files/Бакалавриат, спец�
                 if week_day == 7:
                     continue
                 work_cell = move_cell_down(work_cell, 3)
-            print('----')
+            # print('----')
         work_cell = move_cell_down(work_cell, 1)
-    print(dates)
+    # print(dates)
+    print(f"{Fore.GREEN}Даты сформированы! {Style.RESET_ALL}")
     db.disconnect()
 
 
@@ -349,7 +350,7 @@ def analyze_files_in_folder(folder_path):
         current_folder_path = folders_path_stack.pop()
         if 'инженерных кадров' in current_folder_path:
             continue
-        print(Fore.CYAN, current_folder_path, Style.RESET_ALL)
+        # print(Fore.CYAN, current_folder_path, Style.RESET_ALL)
         # Получаем список файлов и папок в текущей папке
         files = os.listdir(current_folder_path)
         for file in files:
@@ -359,6 +360,7 @@ def analyze_files_in_folder(folder_path):
             elif file.endswith('.xlsx') and not file.startswith(exclude_prefix):
                 # Обработка только файлов с расширением .xlsx и не начинающихся с указанного префикса
                 analyze_worksheet(file_path, file)
+    print(f"{Fore.GREEN}В базу занесены все группы! {Style.RESET_ALL}")
 
 
 if __name__ == '__main__':
@@ -372,5 +374,5 @@ if __name__ == '__main__':
     db.disconnect()
     analyze_dates()
     analyze_files_in_folder(
-        '../converted_files/')
+        './converted_files/')
     print("--- %s seconds ---" % (time.time() - t))
