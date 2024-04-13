@@ -4,17 +4,20 @@
 
 ### Основные папки
 
-* [web](web)
+* [app](app)
 
+  Здесь находится само приложение
+
+* [client](app%2Fclient)
   Здесь будет backend и frontend для веба
     
   Самый важный тут файл - [app.py](web%2Fapp.py), в нем происходит запуск всего приложения
 
   Чтобы запустить веб-приложение, используйте команду:
   ```commandline
-  uvicorn web.app:app
+  uvicorn app.client.app:app
   ```
-* [work_with_files](app/server/work_with_files)
+* [work_with_files](app%2Fserver%2Fwork_with_files)
 
   Здесь происходит работа с excel файлами, а именно:
   1. Скачивание xls и xlsx файлов
