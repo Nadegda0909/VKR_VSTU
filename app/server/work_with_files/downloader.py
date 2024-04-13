@@ -63,7 +63,7 @@ def download_schedule_files(main_url='https://www.vstu.ru/student/raspisaniya/za
                 # Скачиваем файл
                 file_name = os.path.join(category_output_folder,
                                          os.path.basename(file_url))  # Формируем путь для сохранения файла
-                if "1 курс" in file_name:
+                if "1 курс" in file_name or "1курс" in file_name:
                     continue
                 file_response = requests.get(file_url)  # Выполнение GET-запроса для скачивания файла
 

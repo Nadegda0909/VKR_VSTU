@@ -56,6 +56,6 @@ class PostgreSQLDatabase:
         try:
             query = f"TRUNCATE TABLE {table_name} CASCADE;"
             self.execute_query(query)
-            print(f"{Fore.CYAN}All data deleted from the table {table_name}{Style.RESET_ALL}")
+            print(f"{Fore.CYAN}All data {Fore.RED}deleted{Fore.CYAN} from the table {Fore.MAGENTA}{table_name}{Style.RESET_ALL}")
         except (Exception, psycopg2.DatabaseError) as error:
             print(f"{Fore.RED}Error while truncating table {table_name}: {error} {Style.RESET_ALL}")

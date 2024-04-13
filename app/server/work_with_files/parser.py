@@ -1,21 +1,13 @@
 import os
 import re
+import shutil
 import time
 from openpyxl import load_workbook
 from openpyxl.utils import coordinate_to_tuple, get_column_letter
-from database import PostgreSQLDatabase
+from app.server.database import PostgreSQLDatabase
 from colorama import init, Fore, Style
 
-from work_with_files.downloader import download_schedule_files, convert_xls_to_xlsx
-
-# Инициализация colorama (необходимо вызывать один раз в начале программы)
-init()
-
-db = PostgreSQLDatabase(host="localhost",
-                        port="5433",
-                        user='postgres',
-                        password='postgres',
-                        database="postgres")
+from app.server.work_with_files.downloader import download_schedule_files, convert_xls_to_xlsx
 
 
 def find_cell(sheet, value_to_find, position):
@@ -256,11 +248,17 @@ def get_faculty(filename):
     # Разделяем имя файла по символу "_" и берем вторую часть,
     # которая содержит название факультета
     faculty = filename.split("_")[1]
+    if "Магистратура" in faculty:
+        faculty = filename.split('_')[-1].split(' ')[-1].replace('.xlsx', '')
 
     return faculty
 
 
-def analyze_worksheet(filepath, filename):
+def get_study_program():
+    return "Бакалавриат"
+
+
+def analyze_file(filepath, filename):
     # Загрузка файла Excel
     workbook = load_workbook(filename=filepath)  # Сомнительно, но окей
 
@@ -272,7 +270,8 @@ def analyze_worksheet(filepath, filename):
 
     # Словарь для групп (нужен для того, чтобы знать в какой колонке, какая группа)
     groups_dict = {}
-
+    faculty = get_faculty(filename)
+    print(f'{Fore.BLUE}Факультет: {faculty}{Style.RESET_ALL}')
     for num_week in range(1, 2 + 1):
         # print(num_week)
         # Цикл для прохода по одной группе
@@ -287,14 +286,14 @@ def analyze_worksheet(filepath, filename):
                 continue
             print(Fore.GREEN + f'Название группы: {group_name}' + Style.RESET_ALL)
             course = get_course(group_name)
-            faculty = get_faculty(filename)
+            study_program = get_study_program()
             # Добавить в бд название группы
             insert_query = """
-                INSERT INTO groups (group_name, faculty, course)
-                VALUES (%s, %s, %s)
+                INSERT INTO groups (group_name, faculty, course, program)
+                VALUES (%s, %s, %s, %s)
                 ON CONFLICT (group_name) DO NOTHING
             """
-            db.execute_query(insert_query, (group_name, faculty, course))
+            db.execute_query(insert_query, (group_name, faculty, course, study_program))
 
             # Цикл для прохода по всей неделе
             for week_day in range(1, 6 + 1):
@@ -359,12 +358,27 @@ def analyze_files_in_folder(folder_path):
                 folders_path_stack.append(file_path)
             elif file.endswith('.xlsx') and not file.startswith(exclude_prefix):
                 # Обработка только файлов с расширением .xlsx и не начинающихся с указанного префикса
-                analyze_worksheet(file_path, file)
-    print(f"{Fore.GREEN}В базу занесены все группы! {Style.RESET_ALL}")
+                analyze_file(file_path, file)
+    print(f"{Fore.GREEN}В базу занесены все группы!{Style.RESET_ALL}")
 
 
 if __name__ == '__main__':
+    # Инициализация colorama (необходимо вызывать один раз в начале программы)
+    init()
+
+    db = PostgreSQLDatabase(host="localhost",
+                            port="5433",
+                            user='postgres',
+                            password='postgres',
+                            database="postgres")
     t = time.time()
+    items = os.listdir()
+    folders = [item for item in items if os.path.isdir(item) and "__" not in item]
+    for folder in folders:
+        try:
+            shutil.rmtree(folder)
+        except OSError as e:
+            print(f'{Fore.RED}Ошибка при удалении папки {folder} {e} {Style.RESET_ALL}')
     download_schedule_files()
     convert_xls_to_xlsx()
     db.connect()
@@ -374,5 +388,5 @@ if __name__ == '__main__':
     db.disconnect()
     analyze_dates()
     analyze_files_in_folder(
-        './converted_files/')
+        'converted_files/')
     print("--- %s seconds ---" % (time.time() - t))

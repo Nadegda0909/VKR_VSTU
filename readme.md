@@ -14,12 +14,16 @@
   ```commandline
   uvicorn web.app:app
   ```
-* [work_with_files](work_with_files)
+* [work_with_files](app/server/work_with_files)
 
   Здесь происходит работа с excel файлами, а именно:
   1. Скачивание xls и xlsx файлов
   2. Преобразование xls в xlsx файлы
   3. Обработка xlsx файлов, то есть занесение данных в БД
+  
+* [docker](docker)
+  
+  Тут работа с докером. Разворачиваем базу данных.
 
 #### Коротко о всех остальных файлах
 * [requirements.txt](requirements.txt)
@@ -35,6 +39,13 @@
 Так как мы тут используем БД, считаю важным рассказать о ней.
 
 Используем мы PostgreSQL c вот такой структурой данных:
+
+#### ER-диаграмма
+```mermaid
+erDiagram
+    groups ||--o{ lessons : "group_name"
+    dates ||--o{ lessons : "lesson_date"
+```
 #### dates
 |    date    | week_day | week_num |
 |:----------:|:--------:|:--------:|
@@ -53,11 +64,3 @@
 |-----------|:----------:|:------------:|:-------:|:-----------:|
 | 1         |  ивт-160   |      1       |  false  | 2024-02-12  |
 | 10        |  ивт-160   |      2       |  true   | 2024-02-12  |
-
-#### ER-диаграмма
-```mermaid
-erDiagram
-    groups ||--o{ lessons : "group_name"
-    dates ||--o{ lessons : "lesson_date"
-```
-
