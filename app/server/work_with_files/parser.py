@@ -88,12 +88,23 @@ def get_current_group_name(work_zone, sheet) -> str:
     top_row, top_col = coordinate_to_tuple(work_zone[0][0].coordinate)
     top_row -= 1
     group_name = str(sheet.cell(row=top_row, column=top_col).value).strip().lower()
-    # Используем регулярное выражение для извлечения формата "ивт-160" из строки
-    match = re.search(r'(\w+)\s*[-_ ]\s*(\d+)', group_name)
-    if match:
-        group_name = f"{match.group(1)}-{match.group(2)}"
-
-    return group_name
+    if not (group_name == 'none'):
+        # Пробуем поделить через -
+        group_name = group_name.split('-')
+        if len(group_name) > 1:
+            for i in range(len(group_name)):
+                group_name[i] = group_name[i].strip()
+            group_name = group_name[0]+'-' + group_name[1]
+            return group_name
+        # Пробуем поделить через пробел
+        group_name = group_name[0].split(' ')
+        for i in range(len(group_name)):
+            group_name[i] = group_name[i].strip()
+        if ',' in group_name[1]:
+            return group_name[0] + '-' + group_name[1][:-1] + ' ' + group_name[2] + '-' + group_name[3]
+        group_name = group_name[0] + '-' + group_name[1]
+        return group_name
+    return 'none'
 
 
 def check_cell_has_data(cell, sheet):
@@ -217,7 +228,7 @@ def analyze_dates(filename='./converted_files/Бакалавриат, специ
                         query = """
                             INSERT INTO dates (date, week_day, week_num)
                             VALUES (%s, %s, %s)
-                            ON CONFLICT (date) DO NOTHING
+                            -- ON CONFLICT (date) DO NOTHING
                         """
                         db.execute_query(query, (date, week_day, num_week))
 
@@ -254,8 +265,10 @@ def get_faculty(filename):
     return faculty
 
 
-def get_study_program():
-    return "Бакалавриат"
+def get_study_program(filepath):
+    if "бакалавриат" in filepath.lower():
+        return "бакалавриат/Специалитет"
+    return "магистратура"
 
 
 def analyze_file(filepath, filename):
@@ -286,7 +299,7 @@ def analyze_file(filepath, filename):
                 continue
             print(Fore.GREEN + f'Название группы: {group_name}' + Style.RESET_ALL)
             course = get_course(group_name)
-            study_program = get_study_program()
+            study_program = get_study_program(filepath)
             # Добавить в бд название группы
             insert_query = """
                 INSERT INTO groups (group_name, faculty, course, program)

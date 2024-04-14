@@ -42,7 +42,7 @@ def download_schedule_files(main_url='https://www.vstu.ru/student/raspisaniya/za
         else:
             # Если ссылка находится внутри h4, создаем папку в соответствующей папке категории
             category_output_folder = os.path.join(output_folder, link.find_previous('h3').text, link.text)
-            if "Аспирантура" in category_output_folder or "Вечерний" in category_output_folder:
+            if "аспирантура" in category_output_folder.lower() or "вечерний" in category_output_folder.lower():
                 continue
             # Создаем папку, если она еще не существует
             os.makedirs(category_output_folder, exist_ok=True)
@@ -63,7 +63,8 @@ def download_schedule_files(main_url='https://www.vstu.ru/student/raspisaniya/za
                 # Скачиваем файл
                 file_name = os.path.join(category_output_folder,
                                          os.path.basename(file_url))  # Формируем путь для сохранения файла
-                if "1 курс" in file_name or "1курс" in file_name:
+                if ("1 курс" in file_name.lower() or "1курс" in file_name.lower() or "вечерники" in file_name.lower() or
+                        "вмцэ" in file_name.lower()):
                     continue
                 file_response = requests.get(file_url)  # Выполнение GET-запроса для скачивания файла
 
