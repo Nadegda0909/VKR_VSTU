@@ -10,6 +10,11 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+  client:
+    image: fastui
+    ports:
+      - "8000:8000"
+
 
 volumes:
   pg_data:

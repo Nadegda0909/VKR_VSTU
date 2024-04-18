@@ -87,23 +87,27 @@ def move_work_zone_up(work_zone, sheet):
 def get_current_group_name(work_zone, sheet) -> str:
     top_row, top_col = coordinate_to_tuple(work_zone[0][0].coordinate)
     top_row -= 1
+    # Получаем название группы в формате "прин - 266", то есть в "сыром" виде
     group_name = str(sheet.cell(row=top_row, column=top_col).value).strip().lower()
-    if not (group_name == 'none'):
-        # Пробуем поделить через -
-        group_name = group_name.split('-')
+    if group_name != 'none':
+        # Если в названии группы есть "-", то пробуем поделить через "-"
+        group_name = group_name.split('-')  # Тут получается список в формате ["прин ", " 266"]
         if len(group_name) > 1:
             for i in range(len(group_name)):
                 group_name[i] = group_name[i].strip()
-            group_name = group_name[0]+'-' + group_name[1]
-            return group_name
-        # Пробуем поделить через пробел
+            group_name = group_name[0] + '-' + group_name[1]
+            return group_name  # Возвращаем в формате "прин-266"
+
+        # Если "-" не оказалось, то пробуем поделить через пробел
         group_name = group_name[0].split(' ')
         for i in range(len(group_name)):
             group_name[i] = group_name[i].strip()
+        # Для случаев, когда несколько групп пишут через запятую
         if ',' in group_name[1]:
+            # в этом случае возвращаем название групп в формате "прин-266 прин-277"
             return group_name[0] + '-' + group_name[1][:-1] + ' ' + group_name[2] + '-' + group_name[3]
         group_name = group_name[0] + '-' + group_name[1]
-        return group_name
+        return group_name  # Возвращаем в формате "прин-266"
     return 'none'
 
 
@@ -267,13 +271,20 @@ def get_faculty(filename):
 
 def get_study_program(filepath):
     if "бакалавриат" in filepath.lower():
-        return "бакалавриат/Специалитет"
+        return "бакалавриат/специалитет"
     return "магистратура"
 
 
-def analyze_file(filepath, filename):
+def analyze_excel_file(filepath, filename):
     # Загрузка файла Excel
     workbook = load_workbook(filename=filepath)  # Сомнительно, но окей
+    # Получить тип учебной программы (Бакалавриат/Специалитет или Магистратура)
+    study_program = get_study_program(filepath)
+    # Узнать факультет
+    faculty = get_faculty(filename)
+
+    # Т.К. курс вычисляется из номера группы, а номера группы у нас на данный момент нет, то ставим ему None
+    course = None
 
     # Получение активного листа
     sheet = workbook.active
@@ -283,7 +294,6 @@ def analyze_file(filepath, filename):
 
     # Словарь для групп (нужен для того, чтобы знать в какой колонке, какая группа)
     groups_dict = {}
-    faculty = get_faculty(filename)
     print(f'{Fore.BLUE}Факультет: {faculty}{Style.RESET_ALL}')
     for num_week in range(1, 2 + 1):
         # print(num_week)
@@ -297,64 +307,69 @@ def analyze_file(filepath, filename):
                 group_name = groups_dict[number_group]
             if group_name == 'none':
                 continue
-            print(Fore.GREEN + f'Название группы: {group_name}' + Style.RESET_ALL)
-            course = get_course(group_name)
-            study_program = get_study_program(filepath)
-            # Добавить в бд название группы
-            insert_query = """
-                INSERT INTO groups (group_name, faculty, course, program)
-                VALUES (%s, %s, %s, %s)
-                ON CONFLICT (group_name) DO NOTHING
-            """
-            db.execute_query(insert_query, (group_name, faculty, course, study_program))
+            group_name_list = group_name.split(' ')
+            # Если в ячейке написаны 2 группы, то прогоняем цикл по одному и тому же расписанию 2 раза, но с разными
+            # названиями групп
+            for group_index in range(len(group_name_list)):
+                group_name = group_name_list[group_index]
+                print(Fore.GREEN + f'Название группы: {group_name}' + Style.RESET_ALL)
+                if course is None:
+                    course = get_course(group_name)
+                # Добавить в бд название группы
+                insert_query = """
+                    INSERT INTO groups (group_name, faculty, course, program)
+                    VALUES (%s, %s, %s, %s)
+                    ON CONFLICT (group_name) DO NOTHING
+                """
+                db.execute_query(insert_query, (group_name, faculty, course, study_program))
 
-            # Цикл для прохода по всей неделе
-            for week_day in range(1, 6 + 1):
-                print(f"День недели: {week_day}")
-                # Цикл для прохода по одному дню
-                for number_para in range(1, 6 + 1):
-                    # print(f'Номер пары: {number_para}')
-                    # Цикл для прохода по одной паре
-                    has_lesson = False
-                    for row in work_zone:
-                        # Цикл для прохода по одной строке
-                        if has_lesson:
-                            break
-                        for cell in row:
-                            has_lesson = check_cell_has_data(cell, sheet)
+                # Цикл для прохода по всей неделе
+                for week_day in range(1, 6 + 1):
+                    print(f"День недели: {week_day}")
+                    # Цикл для прохода по одному дню
+                    for number_para in range(1, 6 + 1):
+                        # print(f'Номер пары: {number_para}')
+                        # Цикл для прохода по одной паре
+                        has_lesson = False
+                        for row in work_zone:
+                            # Цикл для прохода по одной строке
                             if has_lesson:
                                 break
+                            for cell in row:
+                                has_lesson = check_cell_has_data(cell, sheet)
+                                if has_lesson:
+                                    break
 
-                    # Выбираем даты из таблицы dates по номеру недели и дню недели
-                    query = "SELECT date FROM dates WHERE week_num = %s AND week_day = %s"
-                    dates = db.execute_query(query, (num_week, week_day))
-                    dates = dates[1:]
-                    dates = dates[0]
+                        # Выбираем даты из таблицы dates по номеру недели и дню недели
+                        query = "SELECT date FROM dates WHERE week_num = %s AND week_day = %s"
+                        dates = db.execute_query(query, (num_week, week_day))
+                        dates = dates[1:]
+                        dates = dates[0]
 
-                    # Для каждой выбранной даты вставляем записи в таблицу lessons
-                    for date in dates:
-                        insert_query = """
-                            INSERT INTO lessons (group_name, lesson_order, is_busy, lesson_date)
-                            SELECT %s, %s, %s, %s
-                            WHERE NOT EXISTS (
-                                SELECT 1 FROM lessons 
-                                WHERE group_name = %s AND lesson_order = %s AND lesson_date = %s
-                            )
-                        """
-                        values = (group_name, number_para, has_lesson, date[0], group_name, number_para, date[0])
+                        # Для каждой выбранной даты вставляем записи в таблицу lessons
+                        for date in dates:
+                            insert_query = """
+                                INSERT INTO lessons (group_name, lesson_order, is_busy, lesson_date)
+                                SELECT %s, %s, %s, %s
+                                WHERE NOT EXISTS (
+                                    SELECT 1 FROM lessons 
+                                    WHERE group_name = %s AND lesson_order = %s AND lesson_date = %s
+                                )
+                            """
+                            values = (group_name, number_para, has_lesson, date[0], group_name, number_para, date[0])
 
-                        db.execute_query(insert_query, values)
-                    # print("_________________________")
+                            db.execute_query(insert_query, values)
+                        # print("_________________________")
 
-                    work_zone = move_work_zone_down(work_zone, sheet)
-            work_zone = move_work_zone_up(work_zone, sheet)
+                        work_zone = move_work_zone_down(work_zone, sheet)
+                work_zone = move_work_zone_up(work_zone, sheet)
             work_zone = move_work_zone_right(work_zone, sheet)
         work_zone = create_work_zone(sheet, 7)
         # print(work_zone)
     db.disconnect()
 
 
-def analyze_files_in_folder(folder_path):
+def analyze_excel_files_in_folder(folder_path):
     exclude_prefix = '~$'  # Префикс для исключения файлов
     # Используем стек для хранения путей к папкам
     folders_path_stack = [folder_path]
@@ -371,7 +386,7 @@ def analyze_files_in_folder(folder_path):
                 folders_path_stack.append(file_path)
             elif file.endswith('.xlsx') and not file.startswith(exclude_prefix):
                 # Обработка только файлов с расширением .xlsx и не начинающихся с указанного префикса
-                analyze_file(file_path, file)
+                analyze_excel_file(file_path, file)
     print(f"{Fore.GREEN}В базу занесены все группы!{Style.RESET_ALL}")
 
 
@@ -385,21 +400,21 @@ if __name__ == '__main__':
                             password='postgres',
                             database="postgres")
     t = time.time()
-    items = os.listdir()
-    folders = [item for item in items if os.path.isdir(item) and "__" not in item]
-    for folder in folders:
-        try:
-            shutil.rmtree(folder)
-        except OSError as e:
-            print(f'{Fore.RED}Ошибка при удалении папки {folder} {e} {Style.RESET_ALL}')
-    download_schedule_files()
-    convert_xls_to_xlsx()
+    # items = os.listdir()
+    # folders = [item for item in items if os.path.isdir(item) and "__" not in item]
+    # for folder in folders:
+    #     try:
+    #         shutil.rmtree(folder)
+    #     except OSError as e:
+    #         print(f'{Fore.RED}Ошибка при удалении папки {folder} {e} {Style.RESET_ALL}')
+    # download_schedule_files()
+    # convert_xls_to_xlsx()
     db.connect()
     db.truncate_table('lessons')
     db.truncate_table('groups')
     db.truncate_table('dates')
     db.disconnect()
     analyze_dates()
-    analyze_files_in_folder(
+    analyze_excel_files_in_folder(
         'converted_files/')
     print("--- %s seconds ---" % (time.time() - t))
