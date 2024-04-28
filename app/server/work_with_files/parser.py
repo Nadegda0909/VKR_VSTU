@@ -2,11 +2,13 @@ import os
 import re
 import shutil
 import time
+from datetime import datetime
+
+from colorama import init, Fore, Style
 from openpyxl import load_workbook
 from openpyxl.utils import coordinate_to_tuple, get_column_letter
-from app.server.database import PostgreSQLDatabase
-from colorama import init, Fore, Style
 
+from app.server.database import PostgreSQLDatabase
 from app.server.work_with_files.downloader import download_schedule_files, convert_xls_to_xlsx
 
 
@@ -111,9 +113,44 @@ def get_current_group_name(work_zone, sheet) -> str:
     return 'none'
 
 
-def check_cell_has_data(cell, sheet):
+def check_dates(input_string: str) -> list | None:
+    if isinstance(input_string, str):
+        current_year = datetime.now().year
+        input_string = input_string.lower()
+        date_pattern = r"\d{2}\.\d{2}"
+        dates_strings = re.findall(date_pattern, input_string)
+        if len(dates_strings) == 0:
+            return None
+        dates = [datetime.strptime(date + f".{current_year}", "%d.%m.%Y") for date in dates_strings]
+        return dates
+    return None
+
+
+def check_count_pars(value):
+    if isinstance(value, str):
+        # Паттерн для поиска числа, за которым следует слово "час" или "часа"
+        pattern = r"(\d+)\s+(часа|час)"
+
+        # Поиск шаблона в значении ячейки
+        match = re.search(pattern, value)
+
+        # Если найден шаблон
+        if match:
+            # Извлекаем число из найденного шаблона
+            count = int(match.group(1))
+
+            # Делим число на 2 и возвращаем результат
+            return count / 2
+
+    # Если не найден шаблон, возвращаем None
+    return None
+
+
+def check_cell_has_data_and_dates(cell, sheet):
     if cell.value is not None:
-        return True
+        dates = check_dates(cell.value)
+        count_pars = check_count_pars(cell.value)
+        return True, dates, count_pars
     else:
         # Если ячейка объединена, проверяем, входит ли ее координата в список объединенных ячеек
         for merged_range in sheet.merged_cells.ranges:
@@ -122,8 +159,10 @@ def check_cell_has_data(cell, sheet):
                 first_cell_row, first_cell_col = merged_range.min_row, merged_range.min_col
                 first_cell = sheet.cell(row=first_cell_row, column=first_cell_col)
                 if first_cell.value is not None:
-                    return True
-        return False
+                    dates = check_dates(first_cell.value)
+                    count_pars = check_count_pars(first_cell.value)
+                    return True, dates, count_pars
+        return False, None, None
 
 
 def move_cell_right(cell):
@@ -330,21 +369,31 @@ def analyze_excel_file(filepath, filename):
                     for number_para in range(1, 6 + 1):
                         # print(f'Номер пары: {number_para}')
                         # Цикл для прохода по одной паре
-                        has_lesson = False
+                        new_has_lesson, new_lesson_dates, new_count_pars = None, None, None
+                        has_lesson, lesson_dates, count_pars = None, None, None
                         for row in work_zone:
                             # Цикл для прохода по одной строке
-                            if has_lesson:
-                                break
                             for cell in row:
-                                has_lesson = check_cell_has_data(cell, sheet)
-                                if has_lesson:
-                                    break
+                                new_has_lesson, new_lesson_dates, new_count_pars = check_cell_has_data_and_dates(cell, sheet)
+                                if new_has_lesson is not None:
+                                    has_lesson = new_has_lesson
+                                if new_lesson_dates is not None:
+                                    lesson_dates = new_lesson_dates
+                                if new_count_pars is not None:
+                                    count_pars = new_count_pars
+                        if count_pars is not None:
+                            print(count_pars)
+
 
                         # Выбираем даты из таблицы dates по номеру недели и дню недели
                         query = "SELECT date FROM dates WHERE week_num = %s AND week_day = %s"
-                        dates = db.execute_query(query, (num_week, week_day))
-                        dates = dates[1:]
-                        dates = dates[0]
+                        if lesson_dates is None:
+                            dates = db.execute_query(query, (num_week, week_day))
+                            dates = dates[1:]
+                            dates = dates[0]
+                            dates = [date[0] for date in dates]  # Преобразуем список кортежей в список значений
+                        else:
+                            dates = lesson_dates
 
                         # Для каждой выбранной даты вставляем записи в таблицу lessons
                         for date in dates:
@@ -356,7 +405,7 @@ def analyze_excel_file(filepath, filename):
                                     WHERE group_name = %s AND lesson_order = %s AND lesson_date = %s
                                 )
                             """
-                            values = (group_name, number_para, has_lesson, date[0], group_name, number_para, date[0])
+                            values = (group_name, number_para, has_lesson, date, group_name, number_para, date)
 
                             db.execute_query(insert_query, values)
                         # print("_________________________")
@@ -390,6 +439,18 @@ def analyze_excel_files_in_folder(folder_path):
     print(f"{Fore.GREEN}В базу занесены все группы!{Style.RESET_ALL}")
 
 
+def delete_files_and_download_files():
+    items = os.listdir()
+    folders = [item for item in items if os.path.isdir(item) and "__" not in item]
+    for folder in folders:
+        try:
+            shutil.rmtree(folder)
+        except OSError as e:
+            print(f'{Fore.RED}Ошибка при удалении папки {folder} {e} {Style.RESET_ALL}')
+    download_schedule_files()
+    convert_xls_to_xlsx()
+
+
 if __name__ == '__main__':
     # Инициализация colorama (необходимо вызывать один раз в начале программы)
     init()
@@ -400,15 +461,7 @@ if __name__ == '__main__':
                             password='postgres',
                             database="postgres")
     t = time.time()
-    # items = os.listdir()
-    # folders = [item for item in items if os.path.isdir(item) and "__" not in item]
-    # for folder in folders:
-    #     try:
-    #         shutil.rmtree(folder)
-    #     except OSError as e:
-    #         print(f'{Fore.RED}Ошибка при удалении папки {folder} {e} {Style.RESET_ALL}')
-    # download_schedule_files()
-    # convert_xls_to_xlsx()
+    # delete_files_and_download_files()
     db.connect()
     db.truncate_table('lessons')
     db.truncate_table('groups')

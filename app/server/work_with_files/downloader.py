@@ -1,9 +1,9 @@
 import os  # Импорт модуля для работы с операционной системой
+from shutil import move
+from urllib.parse import urljoin  # Импорт функции для объединения URL-адресов
+
 import requests  # Импорт модуля для выполнения HTTP-запросов
 from bs4 import BeautifulSoup  # Импорт модуля для парсинга HTML
-from urllib.parse import urljoin  # Импорт функции для объединения URL-адресов
-from shutil import move
-
 from colorama import Style, Fore
 from xls2xlsx import XLS2XLSX
 
@@ -48,7 +48,7 @@ def download_schedule_files(main_url='https://www.vstu.ru/student/raspisaniya/za
             os.makedirs(category_output_folder, exist_ok=True)
 
         # Выводим информацию о текущей категории
-        print(f"Обрабатываем категорию: {link.text}")
+        print(f"Скачиваем категорию: {link.text}")
 
         # Получаем HTML-код страницы текущей категории
         category_response = requests.get(category_url)  # Выполнение GET-запроса к странице категории
