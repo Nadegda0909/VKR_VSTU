@@ -1,21 +1,62 @@
-CREATE TABLE public.groups (
-    group_name VARCHAR(100) NOT NULL PRIMARY KEY,
-    faculty VARCHAR(100) NOT NULL,
-    course INTEGER NOT NULL,
-    program VARCHAR(100) NOT NULL
+create table public.groups
+(
+    group_name varchar(100) not null
+        primary key,
+    faculty    varchar(100) not null,
+    course     integer      not null,
+    program    varchar(100) not null
 );
 
-CREATE TABLE public.dates (
-    date DATE NOT NULL CONSTRAINT dates_pk PRIMARY KEY,
-    week_day INTEGER NOT NULL CONSTRAINT week_day_check CHECK ((week_day >= 1) AND (week_day <= 6)),
-    week_num INTEGER NOT NULL CONSTRAINT week_num_check CHECK ((week_num >= 1) AND (week_num <= 2))
+create table public.dates
+(
+    date     date    not null
+        constraint dates_pk
+            primary key,
+    week_day integer not null
+        constraint week_day_check
+            check ((week_day >= 1) AND (week_day <= 6)),
+    week_num integer not null
+        constraint week_num_check
+            check ((week_num >= 1) AND (week_num <= 2))
 );
 
-CREATE TABLE public.lessons (
-    lesson_id SERIAL PRIMARY KEY,
-    group_name VARCHAR(100) NOT NULL REFERENCES public.groups,
-    lesson_order INTEGER NOT NULL CONSTRAINT lessons_lesson_order_check CHECK ((lesson_order >= 1) AND (lesson_order <= 6)),
-    is_busy BOOLEAN NOT NULL,
-    lesson_date DATE NOT NULL CONSTRAINT lessons_date_fk REFERENCES public.dates
+create table public.lessons
+(
+    lesson_id    serial
+        primary key,
+    group_name   varchar(100) not null
+        references public.groups,
+    lesson_order integer      not null
+        constraint lessons_lesson_order_check
+            check ((lesson_order >= 1) AND (lesson_order <= 6)),
+    is_busy      boolean      not null,
+    lesson_date  date         not null
+        constraint lessons_date_fk
+            references public.dates
 );
 
+create table public.students
+(
+    id                  serial
+        primary key,
+    full_name           varchar(255),
+    university_name     varchar(255),
+    faculty             varchar(255),
+    oop_group_2023_2024 varchar(255),
+    ck_program          varchar(255),
+    ck_group            varchar(255)
+);
+
+create table public.lesson_intervals
+(
+    group_name      varchar(100) not null
+        constraint lesson_groups_group_name_fkey
+            references public.groups,
+    lesson_interval varchar(3)   not null,
+    lesson_date     date         not null
+        constraint lesson_groups_lesson_date_fkey
+            references public.dates,
+    is_busy         boolean      not null,
+    constraint lesson_groups_pkey
+        primary key (group_name, lesson_interval, lesson_date)
+);

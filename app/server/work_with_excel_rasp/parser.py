@@ -221,7 +221,8 @@ def move_cell_to_leftmost(cell):
     return new_cell
 
 
-def analyze_dates(filename='./converted_files/Бакалавриат, специалитет/Факультет автоматизированных систем, транспорта и вооружений/ОН_ФАСТИВ_3 курс (320-324).xlsx'):  # его берем за эталон
+def analyze_dates(
+        filename='./converted_files/Бакалавриат, специалитет/Факультет автоматизированных систем, транспорта и вооружений/ОН_ФАСТИВ_3 курс (320-324).xlsx'):  # его берем за эталон
     # Загрузка файла Excel
     workbook = load_workbook(filename=filename)
 
@@ -342,7 +343,8 @@ def insert_schedule_for_one_day_in_db(schedule, num_week, week_day, group_name):
 
                 db.execute_query(insert_query, values)
         else:
-            dates = list(set(lesson_dates) & set(dates_from_db))  # Если есть даты, то берем пересечение этих дат, с датами из бд
+            dates = list(
+                set(lesson_dates) & set(dates_from_db))  # Если есть даты, то берем пересечение этих дат, с датами из бд
 
             # Для каждой выбранной даты вставляем записи в таблицу lessons
             for date in dates:
@@ -371,6 +373,11 @@ def insert_schedule_for_one_day_in_db(schedule, num_week, week_day, group_name):
                 values = (group_name, number_para, not has_lesson, date, group_name, number_para, date)
 
                 db.execute_query(insert_query, values)
+
+
+def update_dates(lesson, new_dates):
+    lesson['dates'].extend(new_dates)
+    lesson['dates'] = list(set(lesson['dates']))
 
 
 def analyze_excel_file(filepath, filename):
@@ -417,8 +424,8 @@ def analyze_excel_file(filepath, filename):
             for group_index in range(len(group_name_list)):
                 group_name = group_name_list[group_index]
                 print(Fore.GREEN + f'Название группы: {group_name}' + Style.RESET_ALL)
-                if group_name != 'мап-450':
-                    continue
+                # if group_name != 'мап-450':
+                #     continue
                 if course is None:
                     course = get_course(group_name)
                 # Добавить в бд название группы
@@ -483,24 +490,21 @@ def analyze_excel_file(filepath, filename):
                                     new_count_pars = count_pars
                         if new_has_lesson is True:
                             schedule_for_one_day[f'lesson_{number_para}']['has_lesson'] = new_has_lesson
+
                         if new_lesson_dates:
                             if number_para > 1:
-                                if schedule_for_one_day[f'lesson_{number_para - 1}']['duration'] > 1:
-                                    schedule_for_one_day[f'lesson_{number_para - 1}']['dates'].extend(
-                                        new_lesson_dates)
-                                    schedule_for_one_day[f'lesson_{number_para - 1}']['dates'] = list(
-                                        set(schedule_for_one_day[f'lesson_{number_para - 1}']['dates']))
-                                    schedule_for_one_day[f'lesson_{number_para}']['dates'] = list(
-                                        set(schedule_for_one_day[f'lesson_{number_para - 1}']['dates']))
+                                prev_lesson = schedule_for_one_day[f'lesson_{number_para - 1}']
+                                current_lesson = schedule_for_one_day[f'lesson_{number_para}']
+
+                                if prev_lesson['duration'] > 1:
+                                    update_dates(prev_lesson, new_lesson_dates)
+                                    current_lesson['dates'] = list(set(prev_lesson['dates']))
                                 else:
-                                    schedule_for_one_day[f'lesson_{number_para}']['dates'].extend(
-                                        new_lesson_dates)
-                                    schedule_for_one_day[f'lesson_{number_para}']['dates'] = list(
-                                        set(schedule_for_one_day[f'lesson_{number_para}']['dates']))
+                                    update_dates(current_lesson, new_lesson_dates)
                             else:
-                                schedule_for_one_day[f'lesson_{number_para}']['dates'].extend(new_lesson_dates)
-                                schedule_for_one_day[f'lesson_{number_para}']['dates'] = list(
-                                    set(schedule_for_one_day[f'lesson_{number_para}']['dates']))
+                                current_lesson = schedule_for_one_day[f'lesson_{number_para}']
+                                update_dates(current_lesson, new_lesson_dates)
+
                         if new_count_pars is not None:
                             schedule_for_one_day[f'lesson_{number_para}']['duration'] = new_count_pars
 
@@ -548,6 +552,36 @@ def delete_files_and_download_files():
     convert_xls_to_xlsx()
 
 
+def create_table_lesson_intervals():
+    db.connect()
+    insert_query = '''
+    INSERT INTO public.lesson_intervals (group_name, lesson_interval, lesson_date, is_busy)
+    SELECT
+        group_name,
+        lesson_interval,
+        lesson_date,
+        BOOL_OR(is_busy) AS is_busy
+    FROM (
+        SELECT
+            group_name,
+            CASE
+                WHEN lesson_order IN (1, 2) THEN '1-2'
+                WHEN lesson_order IN (2, 3) THEN '2-3'
+                WHEN lesson_order IN (3, 4) THEN '3-4'
+                WHEN lesson_order IN (4, 5) THEN '4-5'
+                WHEN lesson_order IN (5, 6) THEN '5-6'
+            END AS lesson_interval,
+            lesson_date,
+            BOOL_OR(is_busy) AS is_busy
+        FROM public.lessons
+        GROUP BY group_name, lesson_interval, lesson_date
+    ) AS lesson_data
+    GROUP BY group_name, lesson_interval, lesson_date;
+    '''
+    db.execute_query(insert_query)
+    db.disconnect()
+
+
 if __name__ == '__main__':
     # Инициализация colorama (необходимо вызывать один раз в начале программы)
     init()
@@ -559,8 +593,10 @@ if __name__ == '__main__':
     db.truncate_table('lessons')
     db.truncate_table('groups')
     db.truncate_table('dates')
+    db.truncate_table('lesson_intervals')
     db.disconnect()
     analyze_dates()
     analyze_excel_files_in_folder(
         'converted_files/')
+    create_table_lesson_intervals()
     print("--- %s seconds ---" % (time.time() - t))
