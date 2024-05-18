@@ -3,6 +3,7 @@ version: '3.8'
 services:
   postgres:
     image: postgres
+    container_name: postgres_for_vkr
     ports:
       - "5433:5432"
     environment:

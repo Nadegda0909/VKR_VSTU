@@ -8,3 +8,4 @@ requests~=2.31.0
 beautifulsoup4~=4.12.3
 xls2xlsx~=0.2.0
 uvicorn
+pygsheets

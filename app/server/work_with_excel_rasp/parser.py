@@ -3,40 +3,42 @@ import re
 import shutil
 import time
 from datetime import datetime
+import itertools
 
 from colorama import init, Fore, Style
 from openpyxl import load_workbook
 from openpyxl.utils import coordinate_to_tuple, get_column_letter
 
 from app.server.database import PostgreSQLDatabase
-from app.server.work_with_files.downloader import download_schedule_files, convert_xls_to_xlsx
+from app.server.work_with_excel_rasp.downloader import download_schedule_files, convert_xls_to_xlsx
 
 
-def find_cell(sheet, value_to_find, position):
-    # Проходимся по всем ячейкам и ищем нужное значение
+def find_cells(sheet, values_to_find):
+    # Создаем пустой список для хранения найденных ячеек с их координатами и номерами колонок
+    found_cells = []
+
+    # Проходимся по всем ячейкам и ищем нужные значения
     for row in sheet.iter_rows():
-        for cell in row:
-            if len(value_to_find) == 1:
+        for col_idx, cell in enumerate(row, start=1):
+            cell_value = str(cell.value).replace(" ", "") if cell.value else ""
+
+            if len(values_to_find) == 1:
                 # Удаляем пробелы и проверяем наличие значения
-                if cell.value and str(cell.value).replace(" ", "") == value_to_find[0]:
-                    if position == 2:
-                        continue
-                    return cell.coordinate
+                if cell_value == values_to_find[0]:
+                    if col_idx == 7:
+                        found_cells.append((cell.coordinate, col_idx))
             else:
-                first_date, second_date = value_to_find
-                if cell.value and (str(cell.value).replace(" ", "") == first_date or
-                                   str(cell.value).replace(" ", "") == second_date):
-                    if position == 2:
-                        continue
-                    return cell.coordinate
+                first_value, second_value = values_to_find
+                if cell_value == first_value or cell_value == second_value:
+                    found_cells.append((cell.coordinate, col_idx))
 
-    # Если значение не найдено, возвращаем None
-    return None
+    # Возвращаем список найденных ячеек
+    return found_cells
 
 
-def create_work_zone(sheet, occurrence_number):
+def create_work_zone(sheet, coordinate):
     # Получаем координаты начальной ячейки
-    start_row, start_col = coordinate_to_tuple(find_cell(sheet, ("1-2",), occurrence_number))
+    start_row, start_col = coordinate_to_tuple(coordinate)
 
     start_col += 1
 
@@ -91,11 +93,12 @@ def get_current_group_name(work_zone, sheet) -> str:
     top_row -= 1
     # Получаем название группы в формате "прин - 266", то есть в "сыром" виде
     group_name = str(sheet.cell(row=top_row, column=top_col).value).strip().lower()
-    if group_name != 'none':
+    if not (group_name == 'none' or group_name == '' or group_name == ' '):
         # Если в названии группы есть "-", то пробуем поделить через "-"
         group_name = group_name.split('-')  # Тут получается список в формате ["прин ", " 266"]
         if len(group_name) > 1:
             for i in range(len(group_name)):
+                group_name[i] = group_name[i].replace('дистанционно', '')
                 group_name[i] = group_name[i].strip()
             group_name = group_name[0] + '-' + group_name[1]
             return group_name  # Возвращаем в формате "прин-266"
@@ -121,7 +124,7 @@ def check_dates(input_string: str) -> list | None:
         dates_strings = re.findall(date_pattern, input_string)
         if len(dates_strings) == 0:
             return None
-        dates = [datetime.strptime(date + f".{current_year}", "%d.%m.%Y") for date in dates_strings]
+        dates = [datetime.strptime(date + f".{current_year}", "%d.%m.%Y").date() for date in dates_strings]
         return dates
     return None
 
@@ -140,7 +143,7 @@ def check_count_pars(value):
             count = int(match.group(1))
 
             # Делим число на 2 и возвращаем результат
-            return count / 2
+            return count // 2
 
     # Если не найден шаблон, возвращаем None
     return None
@@ -218,8 +221,7 @@ def move_cell_to_leftmost(cell):
     return new_cell
 
 
-def analyze_dates(filename='./converted_files/Бакалавриат, специалитет/Факультет электроники и вычислительной '
-                           'техники/ОН_ФЭВТ_2 курс.xlsx'):  # его берем за эталон
+def analyze_dates(filename='./converted_files/Бакалавриат, специалитет/Факультет автоматизированных систем, транспорта и вооружений/ОН_ФАСТИВ_3 курс (320-324).xlsx'):  # его берем за эталон
     # Загрузка файла Excel
     workbook = load_workbook(filename=filename)
 
@@ -244,8 +246,9 @@ def analyze_dates(filename='./converted_files/Бакалавриат, специ
     month_dict = {}
 
     dates = {}
-
-    work_cell = sheet[find_cell(sheet, ("февраль", "сентябрь"), 1)]
+    cell_coordinates = find_cells(sheet, ("февраль", "сентябрь"))
+    cell_coordinate = cell_coordinates[0][0]
+    work_cell = sheet[cell_coordinate]
     # для записи в словарик названий месяцев
     for row in range(1, 5 + 1):
         month_dict.update({row: work_cell.value.lower()})
@@ -314,6 +317,62 @@ def get_study_program(filepath):
     return "магистратура"
 
 
+def insert_schedule_for_one_day_in_db(schedule, num_week, week_day, group_name):
+    for number_para in range(1, 6 + 1):
+        lesson_dates = schedule[f'lesson_{number_para}']["dates"]
+        has_lesson = schedule[f'lesson_{number_para}']["has_lesson"]
+        # Выбираем даты из таблицы dates по номеру недели и дню недели
+        query = "SELECT date FROM dates WHERE week_num = %s AND week_day = %s"
+        dates_from_db = db.execute_query(query, (num_week, week_day))
+        dates_from_db = dates_from_db[1:][0]
+        dates_from_db = [date[0] for date in dates_from_db]  # Преобразуем список кортежей в список значений
+        if not lesson_dates:  # Если у пары нет дат, то берем данные из бд
+            dates = dates_from_db
+            # Для каждой выбранной даты вставляем записи в таблицу lessons
+            for date in dates:
+                insert_query = """
+                            INSERT INTO lessons (group_name, lesson_order, is_busy, lesson_date)
+                            SELECT %s, %s, %s, %s
+                            WHERE NOT EXISTS (
+                                SELECT 1 FROM lessons 
+                                WHERE group_name = %s AND lesson_order = %s AND lesson_date = %s
+                            )
+                        """
+                values = (group_name, number_para, has_lesson, date, group_name, number_para, date)
+
+                db.execute_query(insert_query, values)
+        else:
+            dates = list(set(lesson_dates) & set(dates_from_db))  # Если есть даты, то берем пересечение этих дат, с датами из бд
+
+            # Для каждой выбранной даты вставляем записи в таблицу lessons
+            for date in dates:
+                insert_query = """
+                    INSERT INTO lessons (group_name, lesson_order, is_busy, lesson_date)
+                    SELECT %s, %s, %s, %s
+                    WHERE NOT EXISTS (
+                        SELECT 1 FROM lessons 
+                        WHERE group_name = %s AND lesson_order = %s AND lesson_date = %s
+                    )
+                """
+                values = (group_name, number_para, has_lesson, date, group_name, number_para, date)
+
+                db.execute_query(insert_query, values)
+
+            dates = list(set(dates_from_db) - (set(lesson_dates) & set(dates_from_db)))
+            for date in dates:
+                insert_query = """
+                    INSERT INTO lessons (group_name, lesson_order, is_busy, lesson_date)
+                    SELECT %s, %s, %s, %s
+                    WHERE NOT EXISTS (
+                        SELECT 1 FROM lessons 
+                        WHERE group_name = %s AND lesson_order = %s AND lesson_date = %s
+                    )
+                """
+                values = (group_name, number_para, not has_lesson, date, group_name, number_para, date)
+
+                db.execute_query(insert_query, values)
+
+
 def analyze_excel_file(filepath, filename):
     # Загрузка файла Excel
     workbook = load_workbook(filename=filepath)  # Сомнительно, но окей
@@ -322,6 +381,9 @@ def analyze_excel_file(filepath, filename):
     # Узнать факультет
     faculty = get_faculty(filename)
 
+    if 'магистратура' in study_program:  # Временная штука для отсечения магистрантов
+        return
+
     # Т.К. курс вычисляется из номера группы, а номера группы у нас на данный момент нет, то ставим ему None
     course = None
 
@@ -329,7 +391,10 @@ def analyze_excel_file(filepath, filename):
     sheet = workbook.active
     db.connect()
     # Определение "рабочей зоны" (тут группа ячеек 4 на 3, в которой вся инфа для 1 пары 1 группы)
-    work_zone = create_work_zone(sheet, 1)
+    cell_coordinates = find_cells(sheet, ("1-2",))
+
+    coordinate = cell_coordinates[0][0]
+    work_zone = create_work_zone(sheet, coordinate)
 
     # Словарь для групп (нужен для того, чтобы знать в какой колонке, какая группа)
     groups_dict = {}
@@ -344,7 +409,7 @@ def analyze_excel_file(filepath, filename):
                 groups_dict.update({number_group: group_name})
             else:
                 group_name = groups_dict[number_group]
-            if group_name == 'none':
+            if group_name == 'none' or group_name == '' or group_name == ' ':
                 continue
             group_name_list = group_name.split(' ')
             # Если в ячейке написаны 2 группы, то прогоняем цикл по одному и тому же расписанию 2 раза, но с разными
@@ -352,6 +417,8 @@ def analyze_excel_file(filepath, filename):
             for group_index in range(len(group_name_list)):
                 group_name = group_name_list[group_index]
                 print(Fore.GREEN + f'Название группы: {group_name}' + Style.RESET_ALL)
+                if group_name != 'мап-450':
+                    continue
                 if course is None:
                     course = get_course(group_name)
                 # Добавить в бд название группы
@@ -364,56 +431,86 @@ def analyze_excel_file(filepath, filename):
 
                 # Цикл для прохода по всей неделе
                 for week_day in range(1, 6 + 1):
-                    print(f"День недели: {week_day}")
+                    # print(f"День недели: {week_day}")
                     # Цикл для прохода по одному дню
+                    schedule_for_one_day = {
+                        'lesson_1': {
+                            "duration": 1,
+                            "dates": [],
+                            "has_lesson": False
+                        },
+                        'lesson_2': {
+                            "duration": 1,
+                            "dates": [],
+                            "has_lesson": False
+                        },
+                        'lesson_3': {
+                            "duration": 1,
+                            "dates": [],
+                            "has_lesson": False
+                        },
+                        'lesson_4': {
+                            "duration": 1,
+                            "dates": [],
+                            "has_lesson": False
+                        },
+                        'lesson_5': {
+                            "duration": 1,
+                            "dates": [],
+                            "has_lesson": False
+                        },
+                        'lesson_6': {
+                            "duration": 1,
+                            "dates": [],
+                            "has_lesson": False
+                        },
+                    }
                     for number_para in range(1, 6 + 1):
                         # print(f'Номер пары: {number_para}')
+                        new_has_lesson = False
+                        new_lesson_dates = []
+                        new_count_pars = None
                         # Цикл для прохода по одной паре
-                        new_has_lesson, new_lesson_dates, new_count_pars = None, None, None
-                        has_lesson, lesson_dates, count_pars = None, None, None
                         for row in work_zone:
                             # Цикл для прохода по одной строке
                             for cell in row:
-                                new_has_lesson, new_lesson_dates, new_count_pars = check_cell_has_data_and_dates(cell, sheet)
-                                if new_has_lesson is not None:
-                                    has_lesson = new_has_lesson
-                                if new_lesson_dates is not None:
-                                    lesson_dates = new_lesson_dates
-                                if new_count_pars is not None:
-                                    count_pars = new_count_pars
-                        if count_pars is not None:
-                            print(count_pars)
-
-
-                        # Выбираем даты из таблицы dates по номеру недели и дню недели
-                        query = "SELECT date FROM dates WHERE week_num = %s AND week_day = %s"
-                        if lesson_dates is None:
-                            dates = db.execute_query(query, (num_week, week_day))
-                            dates = dates[1:]
-                            dates = dates[0]
-                            dates = [date[0] for date in dates]  # Преобразуем список кортежей в список значений
-                        else:
-                            dates = lesson_dates
-
-                        # Для каждой выбранной даты вставляем записи в таблицу lessons
-                        for date in dates:
-                            insert_query = """
-                                INSERT INTO lessons (group_name, lesson_order, is_busy, lesson_date)
-                                SELECT %s, %s, %s, %s
-                                WHERE NOT EXISTS (
-                                    SELECT 1 FROM lessons 
-                                    WHERE group_name = %s AND lesson_order = %s AND lesson_date = %s
-                                )
-                            """
-                            values = (group_name, number_para, has_lesson, date, group_name, number_para, date)
-
-                            db.execute_query(insert_query, values)
-                        # print("_________________________")
+                                has_lesson, lesson_dates, count_pars = check_cell_has_data_and_dates(cell, sheet)
+                                if has_lesson:
+                                    new_has_lesson = True
+                                if lesson_dates:
+                                    new_lesson_dates.extend(lesson_dates)
+                                if count_pars is not None:
+                                    new_count_pars = count_pars
+                        if new_has_lesson is True:
+                            schedule_for_one_day[f'lesson_{number_para}']['has_lesson'] = new_has_lesson
+                        if new_lesson_dates:
+                            if number_para > 1:
+                                if schedule_for_one_day[f'lesson_{number_para - 1}']['duration'] > 1:
+                                    schedule_for_one_day[f'lesson_{number_para - 1}']['dates'].extend(
+                                        new_lesson_dates)
+                                    schedule_for_one_day[f'lesson_{number_para - 1}']['dates'] = list(
+                                        set(schedule_for_one_day[f'lesson_{number_para - 1}']['dates']))
+                                    schedule_for_one_day[f'lesson_{number_para}']['dates'] = list(
+                                        set(schedule_for_one_day[f'lesson_{number_para - 1}']['dates']))
+                                else:
+                                    schedule_for_one_day[f'lesson_{number_para}']['dates'].extend(
+                                        new_lesson_dates)
+                                    schedule_for_one_day[f'lesson_{number_para}']['dates'] = list(
+                                        set(schedule_for_one_day[f'lesson_{number_para}']['dates']))
+                            else:
+                                schedule_for_one_day[f'lesson_{number_para}']['dates'].extend(new_lesson_dates)
+                                schedule_for_one_day[f'lesson_{number_para}']['dates'] = list(
+                                    set(schedule_for_one_day[f'lesson_{number_para}']['dates']))
+                        if new_count_pars is not None:
+                            schedule_for_one_day[f'lesson_{number_para}']['duration'] = new_count_pars
 
                         work_zone = move_work_zone_down(work_zone, sheet)
+                    # print(schedule_for_one_day)
+                    insert_schedule_for_one_day_in_db(schedule_for_one_day, num_week, week_day, group_name)
                 work_zone = move_work_zone_up(work_zone, sheet)
             work_zone = move_work_zone_right(work_zone, sheet)
-        work_zone = create_work_zone(sheet, 7)
+        coordinate = cell_coordinates[6][0]
+        work_zone = create_work_zone(sheet, coordinate)
         # print(work_zone)
     db.disconnect()
 
@@ -433,7 +530,7 @@ def analyze_excel_files_in_folder(folder_path):
             file_path = os.path.join(current_folder_path, file)
             if os.path.isdir(file_path):  # Если это папка
                 folders_path_stack.append(file_path)
-            elif file.endswith('.xlsx') and not file.startswith(exclude_prefix):
+            elif file.endswith('.xlsx') and not file.startswith(exclude_prefix) and not file.startswith('ОС_'):
                 # Обработка только файлов с расширением .xlsx и не начинающихся с указанного префикса
                 analyze_excel_file(file_path, file)
     print(f"{Fore.GREEN}В базу занесены все группы!{Style.RESET_ALL}")
@@ -455,11 +552,7 @@ if __name__ == '__main__':
     # Инициализация colorama (необходимо вызывать один раз в начале программы)
     init()
 
-    db = PostgreSQLDatabase(host="localhost",
-                            port="5433",
-                            user='postgres',
-                            password='postgres',
-                            database="postgres")
+    db = PostgreSQLDatabase()
     t = time.time()
     # delete_files_and_download_files()
     db.connect()

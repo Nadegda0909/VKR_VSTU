@@ -5,12 +5,12 @@ init()
 
 
 class PostgreSQLDatabase:
-    def __init__(self, host, port, user, password, database):
-        self.host = host
-        self.port = port
-        self.user = user
-        self.password = password
-        self.database = database
+    def __init__(self):
+        self.host = 'localhost'
+        self.port = 5433
+        self.user = 'postgres'
+        self.password = 'postgres'
+        self.database = 'postgres'
         self.connection = None
 
     def connect(self):
