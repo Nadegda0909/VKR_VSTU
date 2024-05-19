@@ -5,12 +5,17 @@ import time
 from datetime import datetime
 import itertools
 
+from concurrent.futures import ProcessPoolExecutor
+
 from colorama import init, Fore, Style
 from openpyxl import load_workbook
 from openpyxl.utils import coordinate_to_tuple, get_column_letter
 
 from app.server.database import PostgreSQLDatabase
 from app.server.work_with_excel_rasp.downloader import download_schedule_files, convert_xls_to_xlsx
+
+db = PostgreSQLDatabase()
+db.connect()
 
 
 def find_cells(sheet, values_to_find):
@@ -223,12 +228,12 @@ def move_cell_to_leftmost(cell):
 
 def analyze_dates(
         filename='./converted_files/Бакалавриат, специалитет/Факультет автоматизированных систем, транспорта и вооружений/ОН_ФАСТИВ_3 курс (320-324).xlsx'):  # его берем за эталон
+
     # Загрузка файла Excel
     workbook = load_workbook(filename=filename)
 
     # Получение активного листа
     sheet = workbook.active
-    db.connect()
     month_names = {
         "январь": "01",
         "февраль": "02",
@@ -277,6 +282,7 @@ def analyze_dates(
                             VALUES (%s, %s, %s)
                             -- ON CONFLICT (date) DO NOTHING
                         """
+
                         db.execute_query(query, (date, week_day, num_week))
 
                     work_cell = move_cell_right(work_cell)
@@ -288,7 +294,6 @@ def analyze_dates(
         work_cell = move_cell_down(work_cell, 1)
     # print(dates)
     print(f"{Fore.GREEN}Даты сформированы! {Style.RESET_ALL}")
-    db.disconnect()
 
 
 def get_course(group_name):
@@ -340,7 +345,6 @@ def insert_schedule_for_one_day_in_db(schedule, num_week, week_day, group_name):
                             )
                         """
                 values = (group_name, number_para, has_lesson, date, group_name, number_para, date)
-
                 db.execute_query(insert_query, values)
         else:
             dates = list(
@@ -357,7 +361,6 @@ def insert_schedule_for_one_day_in_db(schedule, num_week, week_day, group_name):
                     )
                 """
                 values = (group_name, number_para, has_lesson, date, group_name, number_para, date)
-
                 db.execute_query(insert_query, values)
 
             dates = list(set(dates_from_db) - (set(lesson_dates) & set(dates_from_db)))
@@ -371,7 +374,6 @@ def insert_schedule_for_one_day_in_db(schedule, num_week, week_day, group_name):
                     )
                 """
                 values = (group_name, number_para, not has_lesson, date, group_name, number_para, date)
-
                 db.execute_query(insert_query, values)
 
 
@@ -396,7 +398,6 @@ def analyze_excel_file(filepath, filename):
 
     # Получение активного листа
     sheet = workbook.active
-    db.connect()
     # Определение "рабочей зоны" (тут группа ячеек 4 на 3, в которой вся инфа для 1 пары 1 группы)
     cell_coordinates = find_cells(sheet, ("1-2",))
 
@@ -516,18 +517,23 @@ def analyze_excel_file(filepath, filename):
         coordinate = cell_coordinates[6][0]
         work_zone = create_work_zone(sheet, coordinate)
         # print(work_zone)
-    db.disconnect()
+
+
+def process_file(file_path, file):
+    print(f"Processing file: {file_path}")
+    analyze_excel_file(file_path, file)
 
 
 def analyze_excel_files_in_folder(folder_path):
     exclude_prefix = '~$'  # Префикс для исключения файлов
     # Используем стек для хранения путей к папкам
     folders_path_stack = [folder_path]
+    files_to_process = []
+
     while folders_path_stack:
         current_folder_path = folders_path_stack.pop()
         if 'инженерных кадров' in current_folder_path:
             continue
-        # print(Fore.CYAN, current_folder_path, Style.RESET_ALL)
         # Получаем список файлов и папок в текущей папке
         files = os.listdir(current_folder_path)
         for file in files:
@@ -536,7 +542,19 @@ def analyze_excel_files_in_folder(folder_path):
                 folders_path_stack.append(file_path)
             elif file.endswith('.xlsx') and not file.startswith(exclude_prefix) and not file.startswith('ОС_'):
                 # Обработка только файлов с расширением .xlsx и не начинающихся с указанного префикса
-                analyze_excel_file(file_path, file)
+                files_to_process.append((file_path, file))
+
+    # Обработка файлов с использованием ProcessPoolExecutor
+    with ProcessPoolExecutor() as executor:
+        futures = [executor.submit(process_file, file_path, file) for file_path, file in files_to_process]
+
+        for future in futures:
+            future.result()
+            # try:
+            #       # Вызывает исключения, если они произошли
+            # except Exception as e:
+            #     print(f"Error processing file: {e}")
+
     print(f"{Fore.GREEN}В базу занесены все группы!{Style.RESET_ALL}")
 
 
@@ -553,6 +571,7 @@ def delete_files_and_download_files():
 
 
 def create_table_lesson_intervals():
+    db = PostgreSQLDatabase()
     db.connect()
     insert_query = '''
     INSERT INTO public.lesson_intervals (group_name, lesson_interval, lesson_date, is_busy)
@@ -578,6 +597,7 @@ def create_table_lesson_intervals():
     ) AS lesson_data
     GROUP BY group_name, lesson_interval, lesson_date;
     '''
+
     db.execute_query(insert_query)
     db.disconnect()
 
@@ -588,14 +608,14 @@ if __name__ == '__main__':
 
     db = PostgreSQLDatabase()
     t = time.time()
-    # delete_files_and_download_files()
+    delete_files_and_download_files()
     db.connect()
     db.truncate_table('lessons')
     db.truncate_table('groups')
     db.truncate_table('dates')
     db.truncate_table('lesson_intervals')
-    db.disconnect()
     analyze_dates()
+    db.disconnect()
     analyze_excel_files_in_folder(
         'converted_files/')
     create_table_lesson_intervals()

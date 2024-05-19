@@ -42,6 +42,7 @@ def load_csv_to_database(csv_file, table_name, db):
                     INSERT INTO {} (full_name, university_name,faculty, oop_group_2023_2024, ck_program)
                     VALUES (%s, %s, %s, %s, %s)
                 """.format(table_name)
+
                 # Используем row в качестве кортежа параметров для выполнения запроса
                 db.execute_query(insert_query, (full_name, university_or_branch_1, university_or_branch_2,
                                                 oop_group_2023_2024, ck_program))
