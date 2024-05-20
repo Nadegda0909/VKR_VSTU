@@ -12,14 +12,19 @@ services:
       - pg_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
   frontend:
-    image: nadeaklass0909/vkr_frontend:latest
+    #image: nadeaklass0909/vkr_frontend:latest
+    build:
+      context: frontend
     ports:
       - "8082:80"
     depends_on:
       - backend
 
   backend:
-    image: nadeaklass0909/vkr_backend:latest
+    #image: nadeaklass0909/vkr_backend:latest
+    build:
+      context: backend
+
     ports:
       - "8002:8000"
 

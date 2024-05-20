@@ -1,37 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { Button, notification } from 'antd';
+import { Layout, Menu, Button, notification } from 'antd';
+import { TableOutlined, SnippetsOutlined, RiseOutlined, ClusterOutlined } from '@ant-design/icons';
 import './App.css';
 
-function App() {
-  const [data, setData] = useState(null);
+const { Header, Content } = Layout;
 
-  useEffect(() => {
-    fetch('/api/data')  // Используем относительный путь
-      .then((response) => response.json())
-      .then((data) => setData(data));
-  }, []);
+const items = [
+  {
+    label: 'Файлы',
+    key: 'files',
+    icon: <SnippetsOutlined />,
+  },
+  {
+    label: 'Анализ',
+    key: 'analyze',
+    icon: <RiseOutlined />,
+  },
+  {
+    label: 'Направления',
+    key: 'napravlen',
+    icon: <ClusterOutlined />,
+  },
+  {
+    label: 'Расписания',
+    key: 'raspis',
+    icon: <TableOutlined />,
+  },
+];
 
-  const handleClick = () => {
-    notification.open({
-      message: 'Notification Title',
-      description: 'Button click sent to backend.',
-      placement: 'topLeft',  // Устанавливаем размещение уведомления в верхнем левом углу
-    });
-
-    fetch('/api/button-click', { method: 'POST' })
-      .then(response => response.json())
-      .then(data => console.log(data));
+const App = () => {
+  const [current, setCurrent] = useState('files');
+  const onClick = (e) => {
+    console.log('click ', e);
+    setCurrent(e.key);
   };
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Data from FastAPI</h1>
-        {data ? <p>{data.message}</p> : <p>Loading...</p>}
-        <Button type="primary" onClick={handleClick}>Click Me</Button>
-      </header>
-    </div>
+    <Layout className="layout">
+      <Header className="header">
+        <Menu onClick={onClick} selectedKeys={[current]} mode="horizontal" items={items} />
+      </Header>
+      <Content style={{ padding: '0 25px', textAlign: 'center', marginTop: '64px' }}>
+        <div className="site-layout-content">
+          <h1>Дипломная работа!</h1>
+          <p>Loading...</p>
+          <Button type="primary">Click Me</Button>
+        </div>
+      </Content>
+    </Layout>
   );
-}
+};
 
 export default App;
