@@ -11,8 +11,8 @@ from colorama import init, Fore, Style
 from openpyxl import load_workbook
 from openpyxl.utils import coordinate_to_tuple, get_column_letter
 
-from app.server.database import PostgreSQLDatabase
-from app.server.work_with_excel_rasp.downloader import download_schedule_files, convert_xls_to_xlsx
+from app.backend.database import PostgreSQLDatabase
+from backend.work_with_excel_rasp.downloader import download_schedule_files, convert_xls_to_xlsx
 
 db = PostgreSQLDatabase()
 db.connect()

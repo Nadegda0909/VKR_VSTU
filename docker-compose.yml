@@ -11,10 +11,17 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-  client:
-    image: fastui
+  frontend:
+    image: nadeaklass0909/vkr_frontend:latest
     ports:
-      - "8000:8000"
+      - "8082:80"
+    depends_on:
+      - backend
+
+  backend:
+    image: nadeaklass0909/vkr_backend:latest
+    ports:
+      - "8002:8000"
 
 
 volumes:

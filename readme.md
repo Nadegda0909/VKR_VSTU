@@ -29,7 +29,7 @@
   Тут работа с докером. Разворачиваем базу данных.
 
 #### Коротко о всех остальных файлах
-* [requirements.txt](app/client/requirements.txt)
+* [requirements.txt](frontend/requirements.txt)
 
   Тут хранятся все нужные для проекта зависимости
 

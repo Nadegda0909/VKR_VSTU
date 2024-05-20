@@ -2,7 +2,7 @@ import csv
 import os
 
 from colorama import init, Fore, Style
-from app.server.database import PostgreSQLDatabase
+from app.backend.database import PostgreSQLDatabase
 
 init()
 
