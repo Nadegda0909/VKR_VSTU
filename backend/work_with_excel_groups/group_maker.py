@@ -143,7 +143,7 @@ if __name__ == "__main__":
         minims.append(db.execute_query('''
         SELECT MIN(group_size) AS min_group_size
         FROM (
-            SELECT new_group_name, COUNT(student_id) AS group_size
+            SELECT COUNT(student_id) AS group_size
             FROM new_student_groups
             GROUP BY new_group_name
         ) AS group_counts;
