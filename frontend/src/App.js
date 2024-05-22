@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Layout, Button, notification } from 'antd';
-import Header from './Header';  // Импортируем новый компонент
+import Header from './Header';
+import Login from './Login';
 import './App.css';
 
 const { Content } = Layout;
 
 const App = () => {
   const [data, setData] = useState(null);
+  const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
-    fetch('/api/data')  // Используем относительный путь
-      .then((response) => response.json())
-      .then((data) => setData(data));
-  }, []);
+    if (authenticated) {
+      fetch('/api/data')  // Используем относительный путь
+        .then((response) => response.json())
+        .then((data) => setData(data));
+    }
+  }, [authenticated]);
 
   const handleClick = () => {
     notification.open({
@@ -26,9 +30,18 @@ const App = () => {
       .then(data => console.log(data));
   };
 
+  const handleLogin = (values) => {
+    console.log('Logged in with values:', values);
+    setAuthenticated(true);
+  };
+
+  if (!authenticated) {
+    return <Login onLogin={handleLogin} />;
+  }
+
   return (
     <Layout className="layout">
-      <Header />  {/* Используем новый компонент */}
+      <Header />
       <Content style={{ padding: '0 25px', textAlign: 'center', marginTop: '64px' }}>
         <div className="site-layout-content">
           <h1>Дипломная работа!</h1>

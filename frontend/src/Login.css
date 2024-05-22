@@ -1,0 +1,11 @@
+.login-container {
+  width: 300px;
+  margin: 100px auto;
+  padding: 24px;
+  box-shadow: 0 2px 8px #f0f1f2;
+  background: #fff;
+}
+
+.login-form-button {
+  width: 100%;
+}

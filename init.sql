@@ -47,16 +47,17 @@ create table public.students
     ck_group            varchar(255)
 );
 
-create table public.lesson_intervals
+create table lesson_intervals
 (
+    id              serial
+        constraint lesson_intervals_pk
+            primary key,
     group_name      varchar(100) not null
         constraint lesson_groups_group_name_fkey
-            references public.groups,
+            references groups,
     lesson_interval varchar(3)   not null,
     lesson_date     date         not null
         constraint lesson_groups_lesson_date_fkey
-            references public.dates,
-    is_busy         boolean      not null,
-    constraint lesson_groups_pkey
-        primary key (group_name, lesson_interval, lesson_date)
+            references dates,
+    is_busy         boolean      not null
 );

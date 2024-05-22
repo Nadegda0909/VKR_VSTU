@@ -10,8 +10,8 @@ from concurrent.futures import ProcessPoolExecutor
 from colorama import init, Fore, Style
 from openpyxl import load_workbook
 from openpyxl.utils import coordinate_to_tuple, get_column_letter
-
-from app.backend.database import PostgreSQLDatabase
+from collections import defaultdict
+from backend.database import PostgreSQLDatabase
 from backend.work_with_excel_rasp.downloader import download_schedule_files, convert_xls_to_xlsx
 
 db = PostgreSQLDatabase()
@@ -574,31 +574,33 @@ def create_table_lesson_intervals():
     db = PostgreSQLDatabase()
     db.connect()
     insert_query = '''
-    INSERT INTO public.lesson_intervals (group_name, lesson_interval, lesson_date, is_busy)
-    SELECT
-        group_name,
-        lesson_interval,
-        lesson_date,
-        BOOL_OR(is_busy) AS is_busy
-    FROM (
-        SELECT
-            group_name,
-            CASE
-                WHEN lesson_order IN (1, 2) THEN '1-2'
-                WHEN lesson_order IN (2, 3) THEN '2-3'
-                WHEN lesson_order IN (3, 4) THEN '3-4'
-                WHEN lesson_order IN (4, 5) THEN '4-5'
-                WHEN lesson_order IN (5, 6) THEN '5-6'
-            END AS lesson_interval,
-            lesson_date,
-            BOOL_OR(is_busy) AS is_busy
-        FROM public.lessons
-        GROUP BY group_name, lesson_interval, lesson_date
-    ) AS lesson_data
-    GROUP BY group_name, lesson_interval, lesson_date;
+    select distinct l.group_name, lesson_order, is_busy, d.week_day, week_num, date
+    from lessons l
+    left join public.dates d on d.date = l.lesson_date
+    order by group_name,week_num, week_day, date, lesson_order
     '''
+    lessons = db.execute_query(insert_query)[1]
+    for i in range(1, len(lessons)):
+        current_lesson = lessons[i]
+        current_lesson_number_para = current_lesson[1]
+        current_lesson_is_busy = current_lesson[2]
+        current_lesson_group_name = current_lesson[0]
 
-    db.execute_query(insert_query)
+        previous_lesson = lessons[i - 1]
+        previous_lesson_group_name = previous_lesson[0]
+        previous_lesson_number_para = previous_lesson[1]
+        previous_lesson_is_busy = previous_lesson[2]
+
+        if (previous_lesson_number_para == 6) or (previous_lesson_group_name != current_lesson_group_name):
+            continue
+
+        is_busy = current_lesson_is_busy or previous_lesson_is_busy
+        lesson_interval = f'{previous_lesson_number_para}-{current_lesson_number_para}'
+        # print(current_lesson)
+        insert_query = '''
+        insert into lesson_intervals (group_name, lesson_interval, lesson_date, is_busy) VALUES (%s, %s, %s, %s)
+        '''
+        db.execute_query(insert_query, (previous_lesson_group_name, lesson_interval, previous_lesson[-1], is_busy))
     db.disconnect()
 
 
@@ -608,7 +610,7 @@ if __name__ == '__main__':
 
     db = PostgreSQLDatabase()
     t = time.time()
-    delete_files_and_download_files()
+    # delete_files_and_download_files()
     db.connect()
     db.truncate_table('lessons')
     db.truncate_table('groups')

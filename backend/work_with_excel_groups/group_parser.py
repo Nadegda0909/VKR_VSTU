@@ -2,7 +2,7 @@ import csv
 import os
 
 from colorama import init, Fore, Style
-from app.backend.database import PostgreSQLDatabase
+from backend.database import PostgreSQLDatabase
 
 init()
 
@@ -36,7 +36,7 @@ def load_csv_to_database(csv_file, table_name, db):
                 full_name = row[2]
                 university_or_branch_1 = row[3]
                 university_or_branch_2 = row[4]
-                oop_group_2023_2024 = row[6]
+                oop_group_2023_2024 = row[6].lower()
                 ck_program = row[7]
                 insert_query = """
                     INSERT INTO {} (full_name, university_name,faculty, oop_group_2023_2024, ck_program)
