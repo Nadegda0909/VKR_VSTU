@@ -24,8 +24,8 @@ const Login = ({ onLogin }) => {
       }
     } catch (error) {
       notification.error({
-        message: 'Login Failed',
-        description: 'Invalid username or password',
+        message: 'Вход не выполнен',
+        description: 'Неверное имя пользователя или пароль',
       });
     } finally {
       setLoading(false);
