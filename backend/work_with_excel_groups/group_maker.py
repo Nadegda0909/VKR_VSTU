@@ -8,6 +8,7 @@ Interval = namedtuple('Interval', ['week_num', 'week_day', 'lesson_interval', 'l
 
 # Функция для получения данных о студентах из базы данных
 def fetch_students(db):
+    # SQL-запрос для получения информации о студентах, исключая студентов с факультетом, содержащим 'иаис'
     query = '''
     SELECT id, full_name, university_name, faculty, oop_group_2023_2024, ck_program
     FROM students
@@ -22,6 +23,7 @@ def fetch_students(db):
 
 # Функция для получения всех свободных интервалов из базы данных
 def fetch_all_free_intervals(db):
+    # SQL-запрос для получения всех свободных интервалов
     query = '''
     SELECT g.group_name, d.week_num, d.week_day, li.lesson_interval, li.lesson_date
     FROM lesson_intervals li
@@ -32,6 +34,7 @@ def fetch_all_free_intervals(db):
     result = db.execute_query(query)
     if result:
         intervals = defaultdict(list)
+        # Сохраняем свободные интервалы в словарь, сгруппированный по именам групп
         for row in result[1]:
             group_name, week_num, week_day, lesson_interval, lesson_date = row
             if lesson_interval in ['1-2', '3-4', '5-6']:  # Используем только эти интервалы
@@ -53,30 +56,38 @@ def create_new_groups(db, students_by_program, all_free_intervals, group_size_li
     used_intervals = defaultdict(set)  # Храним занятые интервалы по датам
     group_days = defaultdict(set)  # Храним занятые дни для каждой группы
 
+    # Обрабатываем каждую программу обучения отдельно
     for program, students in students_by_program.items():
         group_counter = count(1)
         original_groups = defaultdict(list)
+
+        # Группируем студентов по их исходным группам
         for student in students:
             original_groups[student[4]].append(student)
 
         current_group = []
+        # Обрабатываем каждую исходную группу
         for original_group, group_students in original_groups.items():
+            # Проверяем, можно ли добавить студентов в текущую группу без превышения лимита
             if len(current_group) + len(group_students) <= group_size_limit:
                 current_group.extend(group_students)
             else:
+                # Создаем новую группу и обрабатываем текущую группу студентов
                 new_group_name = f"{program}_{next(group_counter)}"
                 process_group(db, new_group_name, current_group, all_free_intervals, used_intervals, group_days,
                               max_lessons_per_group)
                 current_group = group_students
 
-        # Обработка оставшихся студентов в последней группе
+        # Обрабатываем оставшихся студентов в последней группе
         if current_group:
             new_group_name = f"{program}_{next(group_counter)}"
             process_group(db, new_group_name, current_group, all_free_intervals, used_intervals, group_days,
                           max_lessons_per_group)
 
 
+# Функция для обработки группы студентов
 def process_group(db, new_group_name, students, all_free_intervals, used_intervals, group_days, max_lessons_per_group):
+    # Добавляем новую группу в таблицу groups
     db.execute_query(
         '''
         INSERT INTO groups (group_name, faculty, course, program)
@@ -149,6 +160,7 @@ if __name__ == "__main__":
         ) AS group_counts;
         '''))
 
+    # Находим наилучший лимит размера группы
     best_limit = minims.index(max(minims))
     db.truncate_table('new_student_groups')
     db.truncate_table('new_lesson_intervals')
