@@ -1,6 +1,7 @@
 from backend.database import PostgreSQLDatabase
 from collections import defaultdict, namedtuple
 from group_maker import fetch_all_free_intervals, is_overlapping
+import time
 
 # Определение именованного кортежа для хранения интервалов
 Interval = namedtuple('Interval', ['week_num', 'week_day', 'lesson_interval', 'lesson_date'])

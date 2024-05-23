@@ -1,6 +1,7 @@
 import os  # Импорт модуля для работы с операционной системой
 from shutil import move
 from urllib.parse import urljoin  # Импорт функции для объединения URL-адресов
+import time
 
 import requests  # Импорт модуля для выполнения HTTP-запросов
 from bs4 import BeautifulSoup  # Импорт модуля для парсинга HTML
