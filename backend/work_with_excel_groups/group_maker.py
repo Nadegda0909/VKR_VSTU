@@ -138,6 +138,7 @@ def process_group(db, new_group_name, students, all_free_intervals, used_interva
 
 
 if __name__ == "__main__":
+    t = time.time()
     db = PostgreSQLDatabase()
     db.connect()
     minims = []
@@ -170,3 +171,5 @@ if __name__ == "__main__":
         students_by_program[student[5]].append(student)
     create_new_groups(db, students_by_program, all_free_intervals, 20 + best_limit)
     db.disconnect()
+    print("--- %s seconds --- group_maker" % (time.time() - t))
+

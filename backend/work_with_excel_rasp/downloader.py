@@ -10,6 +10,7 @@ from xls2xlsx import XLS2XLSX
 
 def download_schedule_files(main_url='https://www.vstu.ru/student/raspisaniya/zanyatiy/',
                             output_folder='downloaded_files'):
+    t = time.time()
     """
     Функция для скачивания файлов расписания с указанной страницы.
 
@@ -76,9 +77,11 @@ def download_schedule_files(main_url='https://www.vstu.ru/student/raspisaniya/za
                 # print(f"Скачан файл: {file_name}")
 
     print(f"{Fore.GREEN}Загрузка завершена. {Style.RESET_ALL}")
+    print("--- %s seconds --- downloader" % (time.time() - t))
 
 
 def convert_xls_to_xlsx(input_folder="downloaded_files", output_folder="converted_files"):
+    t = time.time()
     """
     Конвертирует все файлы формата XLS в XLSX и перемещает все файлы формата XLSX в указанной папке.
 
@@ -116,3 +119,4 @@ def convert_xls_to_xlsx(input_folder="downloaded_files", output_folder="converte
                 # Выводим информацию о перемещенном файле
                 print(f"Перемещен файл: {input_file_path.split('/')[-1]}")
     print(f"{Fore.GREEN}Конвертация завершена. {Style.RESET_ALL}")
+    print("--- %s seconds --- convertor" % (time.time() - t))

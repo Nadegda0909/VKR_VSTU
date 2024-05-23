@@ -605,11 +605,11 @@ def create_table_lesson_intervals():
 
 
 if __name__ == '__main__':
+    t = time.time()
     # Инициализация colorama (необходимо вызывать один раз в начале программы)
     init()
 
     db = PostgreSQLDatabase()
-    t = time.time()
     # delete_files_and_download_files()
     db.connect()
     db.truncate_table('lessons')
@@ -621,4 +621,4 @@ if __name__ == '__main__':
     analyze_excel_files_in_folder(
         'converted_files/')
     create_table_lesson_intervals()
-    print("--- %s seconds ---" % (time.time() - t))
+    print("--- %s seconds --- parser" % (time.time() - t))

@@ -66,9 +66,12 @@ def find_csv_files(directory):
 
 # Пример использования
 if __name__ == "__main__":
+    t = time.time()
     csv_file = find_csv_files('.')
     table_name = "students"
 
     # Создаем объект класса PostgreSQLDatabase
     db = PostgreSQLDatabase()
     load_csv_to_database(csv_file, table_name, db)
+    print("--- %s seconds --- group_parser" % (time.time() - t))
+

@@ -56,6 +56,7 @@ def create_schedule_for_groups(db, all_free_intervals):
 
 
 if __name__ == "__main__":
+    t = time.time()
     db = PostgreSQLDatabase()
     db.connect()
     db.truncate_table('new_lesson_intervals')
@@ -64,3 +65,5 @@ if __name__ == "__main__":
     create_schedule_for_groups(db, all_free_intervals)
 
     db.disconnect()
+    print("--- %s seconds --- create_schedule" % (time.time() - t))
+
