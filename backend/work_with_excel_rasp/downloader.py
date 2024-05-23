@@ -120,3 +120,8 @@ def convert_xls_to_xlsx(input_folder="downloaded_files", output_folder="converte
                 print(f"Перемещен файл: {input_file_path.split('/')[-1]}")
     print(f"{Fore.GREEN}Конвертация завершена. {Style.RESET_ALL}")
     print("--- %s seconds --- convertor" % (time.time() - t))
+
+
+if __name__ == "__main__":
+    download_schedule_files()
+    convert_xls_to_xlsx()
