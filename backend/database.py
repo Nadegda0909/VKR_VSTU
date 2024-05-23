@@ -22,7 +22,7 @@ class PostgreSQLDatabase:
                 password=self.password,
                 database=self.database
             )
-            print(f"{Fore.CYAN}Connected to PostgreSQL{Style.RESET_ALL}")
+            # print(f"{Fore.CYAN}Connected to PostgreSQL{Style.RESET_ALL}")
         except (Exception, psycopg2.DatabaseError) as error:
             print(Fore.RED, "Error while connecting to PostgreSQL:", error, Style.RESET_ALL)
 

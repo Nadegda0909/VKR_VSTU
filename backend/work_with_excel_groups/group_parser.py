@@ -48,7 +48,7 @@ def load_csv_to_database(csv_file, table_name, db):
                 db.execute_query(insert_query, (full_name, university_or_branch_1, university_or_branch_2,
                                                 oop_group_2023_2024, ck_program))
 
-        print(f"{Fore.GREEN}Данные успешно загружены из CSV файла в таблицу.{Style.RESET_ALL}")
+        # print(f"{Fore.GREEN}Данные успешно загружены из CSV файла в таблицу.{Style.RESET_ALL}")
     except Exception as e:
         print(f"{Fore.RED}Произошла ошибка: {e}{Style.RESET_ALL}")
     finally:

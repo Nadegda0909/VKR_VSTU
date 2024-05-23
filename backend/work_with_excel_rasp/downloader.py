@@ -50,7 +50,7 @@ def download_schedule_files(main_url='https://www.vstu.ru/student/raspisaniya/za
             os.makedirs(category_output_folder, exist_ok=True)
 
         # Выводим информацию о текущей категории
-        print(f"Скачиваем категорию: {link.text}")
+        # print(f"Скачиваем категорию: {link.text}")
 
         # Получаем HTML-код страницы текущей категории
         category_response = requests.get(category_url)  # Выполнение GET-запроса к странице категории
@@ -112,13 +112,13 @@ def convert_xls_to_xlsx(input_folder="downloaded_files", output_folder="converte
                 x2x = XLS2XLSX(input_file_path)
                 x2x.to_xlsx(output_file_path)
                 # Выводим информацию о конвертированном файле
-                print(f"Конвертирован файл: {input_file_path.split('/')[-1]} -> {output_file_path.split('/')[-1]}")
+                # print(f"Конвертирован файл: {input_file_path.split('/')[-1]} -> {output_file_path.split('/')[-1]}")
             elif file_extension.lower() == '.xlsx':
                 # Если файл XLSX, просто перемещаем его в новую папку
                 output_file_path = os.path.join(new_root, file)
                 move(input_file_path, output_file_path)
                 # Выводим информацию о перемещенном файле
-                print(f"Перемещен файл: {input_file_path.split('/')[-1]}")
+                # print(f"Перемещен файл: {input_file_path.split('/')[-1]}")
     print(f"{Fore.GREEN}Конвертация завершена. {Style.RESET_ALL}")
     print("--- %s seconds --- convertor" % (time.time() - t))
 
