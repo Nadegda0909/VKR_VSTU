@@ -1,7 +1,7 @@
 FROM python:3.12-slim
 
 # Устанавливаем рабочий каталог
-WORKDIR /app
+WORKDIR /app/backend
 
 # Копируем файлы
 COPY requirements.txt .
