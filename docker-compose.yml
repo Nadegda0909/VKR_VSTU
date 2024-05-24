@@ -21,12 +21,20 @@ services:
       - backend
 
   backend:
-    #image: nadeaklass0909/vkr_backend:latest
     build:
       context: backend
-
+    working_dir: /app/backend
+    environment:
+      - PYTHONPATH=/app
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=postgres
     ports:
       - "8002:8000"
+    volumes:
+      - .:/app
 
 
 volumes:

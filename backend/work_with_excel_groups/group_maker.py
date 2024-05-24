@@ -9,7 +9,6 @@ Interval = namedtuple('Interval', ['week_num', 'week_day', 'lesson_interval', 'l
 
 # Функция для получения данных о студентах из базы данных
 def fetch_students(db):
-    # SQL-запрос для получения информации о студентах, исключая студентов с факультетом, содержащим 'иаис'
     query = '''
     SELECT id, full_name, university_name, faculty, oop_group_2023_2024, ck_program
     FROM students
@@ -24,18 +23,17 @@ def fetch_students(db):
 
 # Функция для получения всех свободных интервалов из базы данных
 def fetch_all_free_intervals(db):
-    # SQL-запрос для получения всех свободных интервалов
     query = '''
     SELECT g.group_name, d.week_num, d.week_day, li.lesson_interval, li.lesson_date
     FROM lesson_intervals li
     JOIN groups g ON li.group_name = g.group_name
     JOIN dates d ON li.lesson_date = d.date
     WHERE li.is_busy = FALSE
+    ORDER BY d.week_num, d.week_day, li.lesson_interval, li.lesson_date;
     '''
     result = db.execute_query(query)
     if result:
         intervals = defaultdict(list)
-        # Сохраняем свободные интервалы в словарь, сгруппированный по именам групп
         for row in result[1]:
             group_name, week_num, week_day, lesson_interval, lesson_date = row
             if lesson_interval in ['1-2', '3-4', '5-6']:  # Используем только эти интервалы
@@ -52,8 +50,7 @@ def is_overlapping(interval1, interval2):
 
 
 # Функция для создания новых групп и добавления данных в новые таблицы
-def create_new_groups(db, students_by_program, all_free_intervals, group_size_limit):
-    max_lessons_per_group = 4  # Ограничение на количество занятий
+def create_new_groups(db, students_by_program, all_free_intervals, group_size_limit, max_lessons_per_group=5):
     used_intervals = defaultdict(set)  # Храним занятые интервалы по датам
     group_days = defaultdict(set)  # Храним занятые дни для каждой группы
 
@@ -173,4 +170,3 @@ if __name__ == "__main__":
     create_new_groups(db, students_by_program, all_free_intervals, 20 + best_limit)
     db.disconnect()
     print("--- %s seconds --- group_maker" % (time.time() - t))
-

@@ -1,16 +1,20 @@
 import psycopg2
 from colorama import init, Fore, Style
+from dotenv import load_dotenv
+import os
 
 init()
+
+load_dotenv()  # Загрузка переменных окружения из файла .env
 
 
 class PostgreSQLDatabase:
     def __init__(self):
-        self.host = 'localhost'
-        self.port = 5433
-        self.user = 'postgres'
-        self.password = 'postgres'
-        self.database = 'postgres'
+        self.host = os.getenv('DB_HOST', 'localhost')
+        self.port = int(os.getenv('DB_PORT', 5432))
+        self.user = os.getenv('DB_USER', 'postgres')
+        self.password = os.getenv('DB_PASSWORD', 'postgres')
+        self.database = os.getenv('DB_NAME', 'postgres')
         self.connection = None
 
     def connect(self):
@@ -56,6 +60,7 @@ class PostgreSQLDatabase:
         try:
             query = f"TRUNCATE TABLE {table_name} CASCADE;"
             self.execute_query(query)
-            print(f"{Fore.CYAN}All data {Fore.RED}deleted{Fore.CYAN} from the table {Fore.MAGENTA}{table_name}{Style.RESET_ALL}")
+            print(
+                f"{Fore.CYAN}All data {Fore.RED}deleted{Fore.CYAN} from the table {Fore.MAGENTA}{table_name}{Style.RESET_ALL}")
         except (Exception, psycopg2.DatabaseError) as error:
             print(f"{Fore.RED}Error while truncating table {table_name}: {error} {Style.RESET_ALL}")

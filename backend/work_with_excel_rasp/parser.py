@@ -293,7 +293,7 @@ def analyze_dates(
             # print('----')
         work_cell = move_cell_down(work_cell, 1)
     # print(dates)
-    # print(f"{Fore.GREEN}Даты сформированы! {Style.RESET_ALL}")
+    print(f"{Fore.GREEN}Даты сформированы! {Style.RESET_ALL}")
 
 
 def get_course(group_name):
@@ -406,7 +406,7 @@ def analyze_excel_file(filepath, filename):
 
     # Словарь для групп (нужен для того, чтобы знать в какой колонке, какая группа)
     groups_dict = {}
-    # print(f'{Fore.BLUE}Факультет: {faculty}{Style.RESET_ALL}')
+    print(f'{Fore.BLUE}Факультет: {faculty}{Style.RESET_ALL}')
     for num_week in range(1, 2 + 1):
         # print(num_week)
         # Цикл для прохода по одной группе
@@ -424,7 +424,7 @@ def analyze_excel_file(filepath, filename):
             # названиями групп
             for group_index in range(len(group_name_list)):
                 group_name = group_name_list[group_index]
-                # print(Fore.GREEN + f'Название группы: {group_name}' + Style.RESET_ALL)
+                print(Fore.GREEN + f'Название группы: {group_name}' + Style.RESET_ALL)
                 # if group_name != 'мап-450':
                 #     continue
                 if course is None:
@@ -555,7 +555,7 @@ def analyze_excel_files_in_folder(folder_path):
             # except Exception as e:
             #     print(f"Error processing file: {e}")
 
-    # print(f"{Fore.GREEN}В базу занесены все группы!{Style.RESET_ALL}")
+    print(f"{Fore.GREEN}В базу занесены все группы!{Style.RESET_ALL}")
 
 
 def delete_files_and_download_files():
