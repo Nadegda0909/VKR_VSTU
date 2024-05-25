@@ -62,24 +62,14 @@ create table public.lesson_intervals
     is_busy         boolean      not null
 );
 
-create table public.new_student_groups
-(
-    id             serial
-        primary key,
-    student_id     integer      not null
-        constraint fk_student
-            references public.students,
-    new_group_name varchar(100) not null
-);
-
 create table public.new_lesson_intervals
 (
     id              serial
         primary key,
-    group_name      varchar(100) not null
-        constraint fk_group
-            references public.groups,
+    group_name      varchar(100) not null,
     lesson_interval varchar(3)   not null,
-    lesson_date     date         not null,
+    lesson_date     date         not null
+        constraint new_lesson_intervals_dates_date_fk
+            references public.dates,
     is_busy         boolean      not null
 );

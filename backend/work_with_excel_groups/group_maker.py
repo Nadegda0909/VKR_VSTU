@@ -100,13 +100,14 @@ def process_group(db, new_group_name, students, all_free_intervals, used_interva
         group_name = student[4].lower()
         free_intervals = all_free_intervals[group_name]
 
-        # Добавляем студента в новую группу
+        # Обновляем студента, присваивая ему новую группу
         db.execute_query(
             '''
-            INSERT INTO new_student_groups (student_id, new_group_name)
-            VALUES (%s, %s)
+            UPDATE students
+            SET ck_group = %s
+            WHERE id = %s;
             ''',
-            (student[0], new_group_name)
+            (new_group_name, student[0])
         )
 
         for interval in free_intervals:
@@ -143,7 +144,6 @@ if __name__ == "__main__":
 
     all_free_intervals = fetch_all_free_intervals(db)
     for group_limit in range(20, 25 + 1):
-        db.truncate_table('new_student_groups')
         db.truncate_table('new_lesson_intervals')
         students = fetch_students(db)
         students_by_program = defaultdict(list)
@@ -153,15 +153,14 @@ if __name__ == "__main__":
         minims.append(db.execute_query('''
         SELECT MIN(group_size) AS min_group_size
         FROM (
-            SELECT COUNT(student_id) AS group_size
-            FROM new_student_groups
-            GROUP BY new_group_name
+            SELECT ck_group, COUNT(id) AS group_size
+            FROM students
+            GROUP BY ck_group
         ) AS group_counts;
         '''))
 
     # Находим наилучший лимит размера группы
     best_limit = minims.index(max(minims))
-    db.truncate_table('new_student_groups')
     db.truncate_table('new_lesson_intervals')
     students = fetch_students(db)
     students_by_program = defaultdict(list)
