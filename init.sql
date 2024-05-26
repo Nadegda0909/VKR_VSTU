@@ -42,7 +42,9 @@ create table public.students
     full_name           varchar(255),
     university_name     varchar(255),
     faculty             varchar(255),
-    oop_group_2023_2024 varchar(255),
+    oop_group_2023_2024 varchar(255)
+        constraint students_groups_group_name_fk
+            references public.groups,
     ck_program          varchar(255),
     ck_group            varchar(255)
 );
@@ -71,5 +73,5 @@ create table public.new_lesson_intervals
     lesson_date     date         not null
         constraint new_lesson_intervals_dates_date_fk
             references public.dates,
-    is_busy         boolean      not null
+is_busy         boolean      not null
 );

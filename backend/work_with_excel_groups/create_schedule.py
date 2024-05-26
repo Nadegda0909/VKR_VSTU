@@ -9,8 +9,9 @@ Interval = namedtuple('Interval', ['week_num', 'week_day', 'lesson_interval', 'l
 # Функция для получения всех новых групп из базы данных
 def fetch_new_groups(db):
     query = '''
-    SELECT DISTINCT new_group_name
-    FROM new_student_groups;
+    SELECT DISTINCT ck_group
+    FROM students
+    WHERE ck_group IS NOT NULL;
     '''
     result = db.execute_query(query)
     if result:
@@ -88,9 +89,8 @@ def create_schedule_for_new_groups(db, new_groups, all_free_intervals, max_lesso
         free_intervals = []
         query = '''
         SELECT DISTINCT s.oop_group_2023_2024
-        FROM new_student_groups nsg
-        JOIN students s ON nsg.student_id = s.id
-        WHERE nsg.new_group_name = %s;
+        FROM students s
+        WHERE s.ck_group = %s;
         '''
         original_groups = db.execute_query(query, (new_group_name,))
         if original_groups:

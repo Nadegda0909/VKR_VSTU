@@ -10,7 +10,6 @@ init()
 
 def load_csv_to_database(csv_file, table_name, db):
     try:
-
         db.connect()
 
         # Создание таблицы, если она не существует
@@ -39,12 +38,28 @@ def load_csv_to_database(csv_file, table_name, db):
                 university_or_branch_2 = row[4]
                 oop_group_2023_2024 = row[6].lower().replace(' ', '')
                 ck_program = row[7].lower()
+
+                # Проверка наличия группы в таблице groups
+                check_group_query = """
+                    SELECT COUNT(*)
+                    FROM groups
+                    WHERE group_name = %s
+                """
+                group_exists = db.execute_query(check_group_query, (oop_group_2023_2024,))[1][0][0] > 0
+
+                # Если группы нет, добавляем ее
+                if not group_exists:
+                    insert_group_query = """
+                        INSERT INTO groups (group_name, faculty, course, program)
+                        VALUES (%s, %s, %s, %s)
+                    """
+                    db.execute_query(insert_group_query, (oop_group_2023_2024, university_or_branch_2, 1, ck_program))
+
+                # Вставка данных в таблицу students
                 insert_query = """
-                    INSERT INTO {} (full_name, university_name,faculty, oop_group_2023_2024, ck_program)
+                    INSERT INTO {} (full_name, university_name, faculty, oop_group_2023_2024, ck_program)
                     VALUES (%s, %s, %s, %s, %s)
                 """.format(table_name)
-
-                # Используем row в качестве кортежа параметров для выполнения запроса
                 db.execute_query(insert_query, (full_name, university_or_branch_1, university_or_branch_2,
                                                 oop_group_2023_2024, ck_program))
 
@@ -75,4 +90,3 @@ if __name__ == "__main__":
     db = PostgreSQLDatabase()
     load_csv_to_database(csv_file, table_name, db)
     print("--- %s seconds --- group_parser" % (time.time() - t))
-

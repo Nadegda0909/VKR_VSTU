@@ -571,6 +571,7 @@ def delete_files_and_download_files():
 
 
 def create_table_lesson_intervals():
+    print(f'{Fore.BLUE}Создается таблица с интервалами групп{Style.RESET_ALL}')
     db = PostgreSQLDatabase()
     db.connect()
     insert_query = '''
