@@ -15,6 +15,7 @@ from backend.database import PostgreSQLDatabase
 from backend.work_with_excel_rasp.downloader import download_schedule_files, convert_xls_to_xlsx
 
 
+
 def find_cells(sheet, values_to_find):
     # Создаем пустой список для хранения найденных ячеек с их координатами и номерами колонок
     found_cells = []
@@ -275,7 +276,7 @@ def analyze_dates(
                         current_month = month_names.get(month_dict[row])
                         date = f'2024-{current_month}-{work_cell.value}'
                         query = """
-                            INSERT INTO dates (date, week_day, week_num)
+                            INSERT INTO learning_dates (date, week_day, week_num)
                             VALUES (%s, %s, %s)
                             -- ON CONFLICT (date) DO NOTHING
                         """
@@ -327,7 +328,7 @@ def insert_schedule_for_one_day_in_db(schedule, num_week, week_day, group_name):
         lesson_dates = schedule[f'lesson_{number_para}']["dates"]
         has_lesson = schedule[f'lesson_{number_para}']["has_lesson"]
         # Выбираем даты из таблицы dates по номеру недели и дню недели
-        query = "SELECT date FROM dates WHERE week_num = %s AND week_day = %s"
+        query = "SELECT date FROM learning_dates WHERE week_num = %s AND week_day = %s"
         dates_from_db = db.execute_query(query, (num_week, week_day))
         dates_from_db = dates_from_db[1:][0]
         dates_from_db = [date[0] for date in dates_from_db]  # Преобразуем список кортежей в список значений
@@ -336,10 +337,10 @@ def insert_schedule_for_one_day_in_db(schedule, num_week, week_day, group_name):
             # Для каждой выбранной даты вставляем записи в таблицу lessons
             for date in dates:
                 insert_query = """
-                            INSERT INTO lessons (group_name, lesson_order, is_busy, lesson_date)
+                            INSERT INTO lessons_for_vstu (group_name, lesson_order, is_busy, lesson_date)
                             SELECT %s, %s, %s, %s
                             WHERE NOT EXISTS (
-                                SELECT 1 FROM lessons 
+                                SELECT 1 FROM lessons_for_vstu 
                                 WHERE group_name = %s AND lesson_order = %s AND lesson_date = %s
                             )
                         """
@@ -352,10 +353,10 @@ def insert_schedule_for_one_day_in_db(schedule, num_week, week_day, group_name):
             # Для каждой выбранной даты вставляем записи в таблицу lessons
             for date in dates:
                 insert_query = """
-                    INSERT INTO lessons (group_name, lesson_order, is_busy, lesson_date)
+                    INSERT INTO lessons_for_vstu (group_name, lesson_order, is_busy, lesson_date)
                     SELECT %s, %s, %s, %s
                     WHERE NOT EXISTS (
-                        SELECT 1 FROM lessons 
+                        SELECT 1 FROM lessons_for_vstu 
                         WHERE group_name = %s AND lesson_order = %s AND lesson_date = %s
                     )
                 """
@@ -365,10 +366,10 @@ def insert_schedule_for_one_day_in_db(schedule, num_week, week_day, group_name):
             dates = list(set(dates_from_db) - (set(lesson_dates) & set(dates_from_db)))
             for date in dates:
                 insert_query = """
-                    INSERT INTO lessons (group_name, lesson_order, is_busy, lesson_date)
+                    INSERT INTO lessons_for_vstu (group_name, lesson_order, is_busy, lesson_date)
                     SELECT %s, %s, %s, %s
                     WHERE NOT EXISTS (
-                        SELECT 1 FROM lessons 
+                        SELECT 1 FROM lessons_for_vstu 
                         WHERE group_name = %s AND lesson_order = %s AND lesson_date = %s
                     )
                 """
@@ -432,7 +433,7 @@ def analyze_excel_file(filepath, filename):
                     course = get_course(group_name)
                 # Добавить в бд название группы
                 insert_query = """
-                    INSERT INTO groups (group_name, faculty, course, program)
+                    INSERT INTO groups_vstu_and_others (group_name, faculty, course, program)
                     VALUES (%s, %s, %s, %s)
                     ON CONFLICT (group_name) DO NOTHING
                 """
@@ -577,8 +578,8 @@ def create_table_lesson_intervals():
     db.connect()
     insert_query = '''
     select distinct l.group_name, lesson_order, is_busy, d.week_day, week_num, date
-    from lessons l
-    left join public.dates d on d.date = l.lesson_date
+    from lessons_for_vstu l
+    left join public.learning_dates d on d.date = l.lesson_date
     order by group_name,week_num, week_day, date, lesson_order
     '''
     lessons = db.execute_query(insert_query)[1]
@@ -600,7 +601,7 @@ def create_table_lesson_intervals():
         lesson_interval = f'{previous_lesson_number_para}-{current_lesson_number_para}'
         # print(current_lesson)
         insert_query = '''
-        insert into lesson_intervals (group_name, lesson_interval, lesson_date, is_busy) VALUES (%s, %s, %s, %s)
+        insert into lesson_intervals_for_vstu (group_name, lesson_interval, lesson_date, is_busy) VALUES (%s, %s, %s, %s)
         '''
         db.execute_query(insert_query, (previous_lesson_group_name, lesson_interval, previous_lesson[-1], is_busy))
 
@@ -613,10 +614,10 @@ if __name__ == '__main__':
     db = PostgreSQLDatabase()
     delete_files_and_download_files()
     db.connect()
-    db.truncate_table('lessons')
-    db.truncate_table('groups')
-    db.truncate_table('dates')
-    db.truncate_table('lesson_intervals')
+    db.truncate_table('lessons_for_vstu')
+    db.truncate_table('groups_vstu_and_others')
+    db.truncate_table('learning_dates')
+    db.truncate_table('lesson_intervals_for_vstu')
     analyze_dates()
     analyze_excel_files_in_folder(
         'converted_files/')

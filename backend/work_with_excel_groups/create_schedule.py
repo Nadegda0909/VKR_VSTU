@@ -10,7 +10,7 @@ Interval = namedtuple('Interval', ['week_num', 'week_day', 'lesson_interval', 'l
 def fetch_new_groups(db):
     query = '''
     SELECT DISTINCT ck_group
-    FROM students
+    FROM students_ck
     WHERE ck_group IS NOT NULL;
     '''
     result = db.execute_query(query)
@@ -23,9 +23,9 @@ def fetch_new_groups(db):
 def fetch_all_free_intervals(db):
     query = '''
     SELECT g.group_name, d.week_num, d.week_day, li.lesson_interval, li.lesson_date
-    FROM lesson_intervals li
-    JOIN groups g ON li.group_name = g.group_name
-    JOIN dates d ON li.lesson_date = d.date
+    FROM lesson_intervals_for_vstu li
+    JOIN groups_vstu_and_others g ON li.group_name = g.group_name
+    JOIN learning_dates d ON li.lesson_date = d.date
     WHERE li.is_busy = FALSE
     ORDER BY d.week_num, d.week_day, li.lesson_interval, li.lesson_date;
     '''
@@ -70,7 +70,7 @@ def process_group(db, new_group_name, free_intervals, used_intervals, group_days
             group_days[new_group_name].add(interval.lesson_date)
             db.execute_query(
                 '''
-                INSERT INTO new_lesson_intervals (group_name, lesson_interval, lesson_date, is_busy)
+                INSERT INTO lesson_intervals_for_ck (group_name, lesson_interval, lesson_date, is_busy)
                 VALUES (%s, %s, %s, FALSE)
                 ''',
                 (new_group_name, interval.lesson_interval, interval.lesson_date)
@@ -89,7 +89,7 @@ def create_schedule_for_new_groups(db, new_groups, all_free_intervals, max_lesso
         free_intervals = []
         query = '''
         SELECT DISTINCT s.oop_group_2023_2024
-        FROM students s
+        FROM students_ck s
         WHERE s.ck_group = %s;
         '''
         original_groups = db.execute_query(query, (new_group_name,))
@@ -110,7 +110,7 @@ if __name__ == "__main__":
 
     all_free_intervals = fetch_all_free_intervals(db)
     new_groups = fetch_new_groups(db)
-    db.truncate_table('new_lesson_intervals')
+    db.truncate_table('lesson_intervals_for_ck')
     create_schedule_for_new_groups(db, new_groups, all_free_intervals)
 
     db.disconnect()

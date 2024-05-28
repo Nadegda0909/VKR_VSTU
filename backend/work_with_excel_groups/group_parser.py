@@ -42,7 +42,7 @@ def load_csv_to_database(csv_file, table_name, db):
                 # Проверка наличия группы в таблице groups
                 check_group_query = """
                     SELECT COUNT(*)
-                    FROM groups
+                    FROM groups_vstu_and_others
                     WHERE group_name = %s
                 """
                 group_exists = db.execute_query(check_group_query, (oop_group_2023_2024,))[1][0][0] > 0
@@ -50,7 +50,7 @@ def load_csv_to_database(csv_file, table_name, db):
                 # Если группы нет, добавляем ее
                 if not group_exists:
                     insert_group_query = """
-                        INSERT INTO groups (group_name, faculty, course, program)
+                        INSERT INTO groups_vstu_and_others (group_name, faculty, course, program)
                         VALUES (%s, %s, %s, %s)
                     """
                     db.execute_query(insert_group_query, (oop_group_2023_2024, university_or_branch_2, 1, ck_program))
@@ -84,7 +84,7 @@ def find_csv_files(directory):
 if __name__ == "__main__":
     t = time.time()
     csv_file = find_csv_files('.')
-    table_name = "students"
+    table_name = "students_ck"
 
     # Создаем объект класса PostgreSQLDatabase
     db = PostgreSQLDatabase()

@@ -11,7 +11,7 @@ Interval = namedtuple('Interval', ['week_num', 'week_day', 'lesson_interval', 'l
 def fetch_students(db):
     query = '''
     SELECT id, full_name, university_name, faculty, oop_group_2023_2024, ck_program
-    FROM students
+    FROM students_ck
     WHERE university_name = 'ВолгГТУ' AND LOWER(faculty) NOT LIKE '%иаис%'
     ORDER BY oop_group_2023_2024;
     '''
@@ -25,9 +25,9 @@ def fetch_students(db):
 def fetch_all_free_intervals(db):
     query = '''
     SELECT g.group_name, d.week_num, d.week_day, li.lesson_interval, li.lesson_date
-    FROM lesson_intervals li
-    JOIN groups g ON li.group_name = g.group_name
-    JOIN dates d ON li.lesson_date = d.date
+    FROM lesson_intervals_for_vstu li
+    JOIN groups_vstu_and_others g ON li.group_name = g.group_name
+    JOIN learning_dates d ON li.lesson_date = d.date
     WHERE li.is_busy = FALSE
     ORDER BY d.week_num, d.week_day, li.lesson_interval, li.lesson_date;
     '''
@@ -88,7 +88,7 @@ def process_group(db, new_group_name, students, all_free_intervals, used_interva
     # Добавляем новую группу в таблицу groups
     db.execute_query(
         '''
-        INSERT INTO groups (group_name, faculty, course, program)
+        INSERT INTO groups_vstu_and_others (group_name, faculty, course, program)
         VALUES (%s, %s, %s, %s)
         ON CONFLICT (group_name) DO NOTHING;
         ''',
@@ -103,7 +103,7 @@ def process_group(db, new_group_name, students, all_free_intervals, used_interva
         # Обновляем студента, присваивая ему новую группу
         db.execute_query(
             '''
-            UPDATE students
+            UPDATE students_ck
             SET ck_group = %s
             WHERE id = %s;
             ''',
@@ -128,7 +128,7 @@ def process_group(db, new_group_name, students, all_free_intervals, used_interva
                 group_days[new_group_name].add(interval.lesson_date)
                 db.execute_query(
                     '''
-                    INSERT INTO new_lesson_intervals (group_name, lesson_interval, lesson_date, is_busy)
+                    INSERT INTO lesson_intervals_for_ck (group_name, lesson_interval, lesson_date, is_busy)
                     VALUES (%s, %s, %s, FALSE)
                     ''',
                     (new_group_name, interval.lesson_interval, interval.lesson_date)
@@ -144,7 +144,7 @@ if __name__ == "__main__":
 
     all_free_intervals = fetch_all_free_intervals(db)
     for group_limit in range(20, 25 + 1):
-        db.truncate_table('new_lesson_intervals')
+        db.truncate_table('lesson_intervals_for_ck')
         students = fetch_students(db)
         students_by_program = defaultdict(list)
         for student in students:
@@ -154,14 +154,14 @@ if __name__ == "__main__":
         SELECT MIN(group_size) AS min_group_size
         FROM (
             SELECT ck_group, COUNT(id) AS group_size
-            FROM students
+            FROM students_ck
             GROUP BY ck_group
         ) AS group_counts;
         '''))
 
     # Находим наилучший лимит размера группы
     best_limit = minims.index(max(minims))
-    db.truncate_table('new_lesson_intervals')
+    db.truncate_table('lesson_intervals_for_ck')
     students = fetch_students(db)
     students_by_program = defaultdict(list)
     for student in students:

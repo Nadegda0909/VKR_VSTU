@@ -7,6 +7,7 @@ import requests  # Импорт модуля для выполнения HTTP-з
 from bs4 import BeautifulSoup  # Импорт модуля для парсинга HTML
 from colorama import Style, Fore
 from xls2xlsx import XLS2XLSX
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 
 def download_schedule_files(main_url='https://www.vstu.ru/student/raspisaniya/zanyatiy/',
@@ -81,44 +82,43 @@ def download_schedule_files(main_url='https://www.vstu.ru/student/raspisaniya/za
     print("--- %s seconds --- downloader" % (time.time() - t))
 
 
+def convert_file(file_info):
+    input_file_path, new_root = file_info
+    file_name, file_extension = os.path.splitext(os.path.basename(input_file_path))
+
+    if file_extension.lower() == '.xls':
+        output_file_path = os.path.join(new_root, f"{file_name}.xlsx")
+        x2x = XLS2XLSX(input_file_path)
+        x2x.to_xlsx(output_file_path)
+        return f"Конвертирован файл: {input_file_path.split('/')[-1]} -> {output_file_path.split('/')[-1]}"
+    elif file_extension.lower() == '.xlsx':
+        output_file_path = os.path.join(new_root, os.path.basename(input_file_path))
+        move(input_file_path, output_file_path)
+        return f"Перемещен файл: {input_file_path.split('/')[-1]}"
+    else:
+        return None
+
+
 def convert_xls_to_xlsx(input_folder="downloaded_files", output_folder="converted_files"):
     t = time.time()
-    """
-    Конвертирует все файлы формата XLS в XLSX и перемещает все файлы формата XLSX в указанной папке.
+    file_infos = []
 
-    Аргументы:
-    input_folder (str): Путь к папке с исходными файлами.
-    output_folder (str): Путь к папке для сохранения конвертированных файлов.
-    """
-    # Проходимся по всем файлам и поддиректориям в папке input_folder
     for root, dirs, files in os.walk(input_folder):
-        # Формируем путь к поддиректории в новой папке
         new_root = os.path.join(output_folder, os.path.relpath(root, input_folder))
-
-        # Создаем поддиректорию в новой папке, если она еще не существует
         os.makedirs(new_root, exist_ok=True)
 
-        # Перебираем все файлы в текущей директории
         for file in files:
-            # Получаем полный путь к исходному файлу
             input_file_path = os.path.join(root, file)
+            file_infos.append((input_file_path, new_root))
 
-            # Определяем имя файла без расширения исходного формата
-            file_name, file_extension = os.path.splitext(file)
+    # Используем все доступные ядра процессора
+    with ProcessPoolExecutor() as executor:
+        futures = {executor.submit(convert_file, file_info): file_info for file_info in file_infos}
+        for future in as_completed(futures):
+            result = future.result()
+            if result:
+                print(result)
 
-            if file_extension.lower() == '.xls':
-                # Если файл XLS, то конвертируем его в формат XLSX
-                output_file_path = os.path.join(new_root, f"{file_name}.xlsx")
-                x2x = XLS2XLSX(input_file_path)
-                x2x.to_xlsx(output_file_path)
-                # Выводим информацию о конвертированном файле
-                print(f"Конвертирован файл: {input_file_path.split('/')[-1]} -> {output_file_path.split('/')[-1]}")
-            elif file_extension.lower() == '.xlsx':
-                # Если файл XLSX, просто перемещаем его в новую папку
-                output_file_path = os.path.join(new_root, file)
-                move(input_file_path, output_file_path)
-                # Выводим информацию о перемещенном файле
-                print(f"Перемещен файл: {input_file_path.split('/')[-1]}")
     print(f"{Fore.GREEN}Конвертация завершена. {Style.RESET_ALL}")
     print("--- %s seconds --- convertor" % (time.time() - t))
 
