@@ -52,7 +52,7 @@ class PostgreSQLDatabase:
         if self.connection is not None:
             self.connection.close()
             self.connection = None
-            print(f"{Fore.CYAN}Disconnected from PostgreSQL{Style.RESET_ALL}")
+            # print(f"{Fore.CYAN}Disconnected from PostgreSQL{Style.RESET_ALL}")
         else:
             print(f"{Fore.LIGHTRED_EX}No connection to PostgreSQL{Style.RESET_ALL}")
 

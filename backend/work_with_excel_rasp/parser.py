@@ -14,9 +14,6 @@ from collections import defaultdict
 from backend.database import PostgreSQLDatabase
 from backend.work_with_excel_rasp.downloader import download_schedule_files, convert_xls_to_xlsx
 
-db = PostgreSQLDatabase()
-db.connect()
-
 
 def find_cells(sheet, values_to_find):
     # Создаем пустой список для хранения найденных ячеек с их координатами и номерами колонок
@@ -324,6 +321,8 @@ def get_study_program(filepath):
 
 
 def insert_schedule_for_one_day_in_db(schedule, num_week, week_day, group_name):
+    db = PostgreSQLDatabase()
+    db.connect()
     for number_para in range(1, 6 + 1):
         lesson_dates = schedule[f'lesson_{number_para}']["dates"]
         has_lesson = schedule[f'lesson_{number_para}']["has_lesson"]
@@ -383,6 +382,8 @@ def update_dates(lesson, new_dates):
 
 
 def analyze_excel_file(filepath, filename):
+    db = PostgreSQLDatabase()
+    db.connect()
     # Загрузка файла Excel
     workbook = load_workbook(filename=filepath)  # Сомнительно, но окей
     # Получить тип учебной программы (Бакалавриат/Специалитет или Магистратура)
@@ -602,7 +603,6 @@ def create_table_lesson_intervals():
         insert into lesson_intervals (group_name, lesson_interval, lesson_date, is_busy) VALUES (%s, %s, %s, %s)
         '''
         db.execute_query(insert_query, (previous_lesson_group_name, lesson_interval, previous_lesson[-1], is_busy))
-    db.disconnect()
 
 
 if __name__ == '__main__':
@@ -611,14 +611,13 @@ if __name__ == '__main__':
     init()
 
     db = PostgreSQLDatabase()
-    # delete_files_and_download_files()
+    delete_files_and_download_files()
     db.connect()
     db.truncate_table('lessons')
     db.truncate_table('groups')
     db.truncate_table('dates')
     db.truncate_table('lesson_intervals')
     analyze_dates()
-    db.disconnect()
     analyze_excel_files_in_folder(
         'converted_files/')
     create_table_lesson_intervals()
