@@ -15,7 +15,6 @@ from backend.database import PostgreSQLDatabase
 from backend.work_with_excel_rasp.downloader import download_schedule_files, convert_xls_to_xlsx
 
 
-
 def find_cells(sheet, values_to_find):
     # Создаем пустой список для хранения найденных ячеек с их координатами и номерами колонок
     found_cells = []
@@ -225,7 +224,9 @@ def move_cell_to_leftmost(cell):
 
 
 def analyze_dates(
-        filename='./converted_files/Бакалавриат, специалитет/Факультет автоматизированных систем, транспорта и вооружений/ОН_ФАСТИВ_3 курс (320-324).xlsx'):  # его берем за эталон
+        filename='./converted_files/Бакалавриат, специалитет/'
+                 'Факультет автоматизированных систем, транспорта и вооружений/'
+                 'ОН_ФАСТИВ_3 курс (320-324).xlsx'):  # его берем за эталон
 
     # Загрузка файла Excel
     workbook = load_workbook(filename=filename)
@@ -601,7 +602,8 @@ def create_table_lesson_intervals():
         lesson_interval = f'{previous_lesson_number_para}-{current_lesson_number_para}'
         # print(current_lesson)
         insert_query = '''
-        insert into lesson_intervals_for_vstu (group_name, lesson_interval, lesson_date, is_busy) VALUES (%s, %s, %s, %s)
+        insert into lesson_intervals_for_vstu (group_name, lesson_interval, lesson_date, is_busy)
+        VALUES (%s, %s, %s, %s)
         '''
         db.execute_query(insert_query, (previous_lesson_group_name, lesson_interval, previous_lesson[-1], is_busy))
 

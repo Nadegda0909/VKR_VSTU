@@ -20,7 +20,7 @@ class LoginRequest(BaseModel):
 
 @app.get("/api/data")
 def read_root():
-    return {"message": "Я не панк"}
+    return {"message": "Тестовое сообщение!"}
 
 
 @app.post("/api/button-click")

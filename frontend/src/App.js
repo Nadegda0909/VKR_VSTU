@@ -20,8 +20,8 @@ const App = () => {
 
   const handleClick = () => {
     notification.open({
-      message: 'Notification Title',
-      description: 'Button click sent to backend.',
+      message: 'Заголовок уведомления',
+      description: 'Кнопка тыкнута и бэкенд об этом знает.',
       placement: 'topLeft',  // Устанавливаем размещение уведомления в верхнем левом углу
     });
 
