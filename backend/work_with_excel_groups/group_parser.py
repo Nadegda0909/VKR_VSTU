@@ -50,10 +50,10 @@ def load_csv_to_database(csv_file, table_name, db):
                 # Если группы нет, добавляем ее
                 if not group_exists:
                     insert_group_query = """
-                        INSERT INTO groups_vstu_and_others (group_name, faculty, course, program)
-                        VALUES (%s, %s, %s, %s)
+                        INSERT INTO groups_vstu_and_others (group_name, faculty, program)
+                        VALUES (%s, %s, %s)
                     """
-                    db.execute_query(insert_group_query, (oop_group_2023_2024, university_or_branch_2, 1, ck_program))
+                    db.execute_query(insert_group_query, (oop_group_2023_2024, university_or_branch_2, ck_program))
 
                 # Вставка данных в таблицу students
                 insert_query = """

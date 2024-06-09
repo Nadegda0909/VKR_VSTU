@@ -3,8 +3,8 @@ create table public.groups_vstu_and_others
     group_name varchar(100) not null
         constraint groups_pkey
             primary key,
-    faculty    varchar(100) not null,
-    course     integer      not null,
+    faculty    varchar(100),
+    course     integer,
     program    varchar(100) not null
 );
 
