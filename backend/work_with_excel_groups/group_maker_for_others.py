@@ -180,7 +180,7 @@ if __name__ == "__main__":
         students_by_program[student[5]].append(student)
 
     all_free_intervals = fetch_all_free_intervals(db)
-    create_new_groups(db, students_by_program, all_free_intervals, group_size_limit=20)
+    create_new_groups(db, students_by_program, all_free_intervals, group_size_limit=22)
 
     db.disconnect()
     print("--- %s seconds --- group_maker_for_other_universities" % (time.time() - t))
