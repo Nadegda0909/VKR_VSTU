@@ -67,7 +67,7 @@
    ```
    ```shell
    # Linux:
-   python -m venv venv
+   python3 -m venv venv
    source ./venv/bin/activate
    ```
 4. Установите зависимости
@@ -133,7 +133,7 @@
    В БД таблица `lesson_intervals_for_ck` заполняется данными
 8. Перейдите в [папку](backend/work_with_ck_excel_rasp)
    ```shell
-   cd ../work_with_excel_rasp
+   cd ../work_with_ck_excel_rasp
    ```
 9. Запустите модуль для создания Excel файла с группами ЦК
    ```shell
