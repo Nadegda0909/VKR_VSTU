@@ -1,29 +1,41 @@
 # Разработка программы для интеграции и обработки расписаний ВолгГТУ
 
-# Описание
+## Описание
 
 ### Система анализирует расписание ВолгГТУ и составляет расписание для Цифровой Кафедры и состоит из следующих основных компонентов:
 
-1. [Модуль](backend/work_with_excel_rasp/downloader.py) загрузки расписания:
+1. [Модуль загрузки расписания](backend/work_with_excel_rasp/downloader.py) загрузки расписания:
 
    Пользователь может загрузить в систему расписание с сайта ВолгГТУ или со своего компьютера
-2. [Модуль](backend/work_with_excel_rasp/parser.py) обработки расписания:
+2. [Модуль обработки расписания](backend/work_with_excel_rasp/parser.py) обработки расписания:
    
    Система анализирует расписание ВолгГТУ и находит для каждой группы незанятые пары, в которые она может заниматься
-3. [Модуль](backend/work_with_excel_groups) создания новых групп:
+3. [Модуль Модуль создания групп ЦК](backend/work_with_excel_groups) создания новых групп:
    - Пользователь может загрузить список студентов, которые записались на Цифровую Кафедру
    - На основании списка студентов и незанятых пар, система составляет группы Цифровой кафедры
    - На основании групп Цифровой Кафедры составляется расписание Цифровой Кафедры
-4. [Модуль](backend/work_with_ck_excel_rasp) создания Excel табличек с расписанием и списками групп Цифровой Кафедры
+4. [Модуль создания Excel табличек](backend/work_with_ck_excel_rasp) создания Excel табличек с расписанием и списками групп Цифровой Кафедры
    - Система создает Excel табличку для групп Цифровой Кафедры
    - Система создает Excel табличку для расписания Цифровой Кафедры
 
-# Установка
+## Требования
 
-Для установки/запуска:
+- [Docker](https://www.docker.com/products/docker-desktop/)
+- [Docker-Compose](https://docs.docker.com/compose/install/)
+- [Git](https://www.geeksforgeeks.org/how-to-install-git-on-windows-macos-and-linux/)
+- [Python 3.12](https://www.python.org/downloads/)
+
+## Архитектура проекта
+
+- **[backend](backend)**: Серверная часть проекта, включая обработку данных и взаимодействие с базой данных.
+- **[frontend](frontend)**: Веб-интерфейс для взаимодействия с пользователем.
+
+## Установка
+
+#### Для установки/запуска:
 1. Убедитесь, что у вас установлен [Docker](https://www.docker.com/products/docker-desktop/)
-и [docker-compose](https://docs.docker.com/compose/install/)
-2. Убедитесь, что у вас установлен [git](https://www.geeksforgeeks.org/how-to-install-git-on-windows-macos-and-linux/):
+и [Docker-Compose](https://docs.docker.com/compose/install/)
+2. Убедитесь, что у вас установлен [Git](https://www.geeksforgeeks.org/how-to-install-git-on-windows-macos-and-linux/):
 3. Клонируете репозиторий и переходите в папку с проектом
    ```shell
    git clone https://github.com/Nadegda0909/VKR_VSTU.git
