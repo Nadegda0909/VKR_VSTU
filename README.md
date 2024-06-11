@@ -72,12 +72,24 @@
    ```
 4. Установите зависимости
    ```shell
+   # Linux:
    (cd backend
    pip install -r requirements.txt)
    ```
+   ```shell
+   # Windows:
+   cd backend
+   pip install -r requirements.txt
+   cd ..
+   ```
 5. Установите переменную окружения PYTHONPATH
    ```shell
+   # Linux:
    export PYTHONPATH=$(pwd):$PYTHONPATH
+   ```
+   ```shell
+   # Windows:
+   set PYTHONPATH=%cd%;%PYTHONPATH%
    ```
 ## Тестирование
 1. Поднимаем базу данных (на порту `5433`)
