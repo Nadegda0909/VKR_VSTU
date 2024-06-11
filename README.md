@@ -61,19 +61,21 @@
    ```
 3. Создайте и активируйте виртуальное окружение
    ```shell
-   # Windows
-   python -m venv venv
-   .\venv\Scripts\Activate
-   ```
-   Если вдруг выдало ошибку, то пропишите в терминале (в диалоге введите `Y`)
-   ```shell
-   Set-ExecutionPolicy RemoteSigned
-   ```
-   ```shell
    # Linux:
    python3 -m venv venv
    source ./venv/bin/activate
    ```
+   ```shell
+   # Windows PowerShell:
+   python -m venv venv
+   .\venv\Scripts\Activate
+   ```
+   - Если вдруг выдало ошибку, то пропишите в терминале (в диалоге введите `Y`)
+   
+   ```shell
+      # Windows PowerShell:
+      Set-ExecutionPolicy RemoteSigned
+      ```
 4. Установите зависимости
    ```shell
    # Linux:
@@ -81,7 +83,7 @@
    pip install -r requirements.txt)
    ```
    ```shell
-   # Windows:
+   # Windows PowerShell:
    cd backend
    pip install -r requirements.txt
    cd ..
@@ -92,7 +94,7 @@
    export PYTHONPATH=$(pwd):$PYTHONPATH
    ```
    ```shell
-   # Windows:
+   # Windows PowerShell:
    $env:PYTHONPATH = (Get-Location).Path
    ```
 ## Тестирование
