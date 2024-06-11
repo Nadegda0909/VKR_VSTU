@@ -39,6 +39,8 @@
 3. Клонируете репозиторий и переходите в папку с проектом
    ```shell
    git clone https://github.com/Nadegda0909/VKR_VSTU.git
+   ```
+   ```shell
    cd VKR_VSTU
    ```
 4. Запускаете docker-compose
@@ -57,6 +59,8 @@
 2. Клонируете репозиторий и переходите в папку с проектом
    ```shell
    git clone https://github.com/Nadegda0909/VKR_VSTU.git
+   ```
+   ```shell
    cd VKR_VSTU
    ```
 3. Создайте и активируйте виртуальное окружение
@@ -68,6 +72,9 @@
    ```shell
    # Windows PowerShell:
    python -m venv venv
+   ```
+   ```shell
+   # Windows PowerShell:
    .\venv\Scripts\Activate
    ```
    - Если вдруг выдало ошибку, то пропишите в терминале (в диалоге введите `Y`)
@@ -85,7 +92,13 @@
    ```shell
    # Windows PowerShell:
    cd backend
+   ```
+   ```shell
+   # Windows PowerShell:
    pip install -r requirements.txt
+   ```
+   ```shell
+   # Windows PowerShell:
    cd ..
    ```
 5. Установите переменную окружения PYTHONPATH
@@ -127,8 +140,7 @@
    В БД таблицы `groups_vstu_and_others`, `students_ck` заполнятся данными
 6. Запустите модуль создания групп и расписания для ЦК
    ```shell
-   python group_maker.py
-   python group_maker_for_others.py
+   python group_maker.py && python group_maker_for_others.py
    ```
 7. (Опционально) Запустите модуль для создания только расписания, если существуют группы ЦК
    ```shell
