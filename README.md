@@ -108,7 +108,7 @@
    ```
    ```shell
    # Windows PowerShell:
-   $env:PYTHONPATH = (Get-Location).Path
+     $env:PYTHONPATH = (Get-Location).Path
    ```
 ## Тестирование
 1. Поднимаем базу данных (на порту `5433`)
