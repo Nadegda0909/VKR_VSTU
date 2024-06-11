@@ -609,6 +609,7 @@ def create_table_lesson_intervals():
 
 
 def create_all_tables_for_db():
+    print(f'{Fore.CYAN}Создаем таблички в БД{Style.RESET_ALL}')
     db = PostgreSQLDatabase()
     db.connect()
     sql_query = '''
@@ -697,6 +698,8 @@ def create_all_tables_for_db():
     '''
     db.execute_query(sql_query)
     db.disconnect()
+    print(f'{Fore.CYAN}Таблички созданы!{Style.RESET_ALL}')
+
 
 if __name__ == '__main__':
     t = time.time()
@@ -705,6 +708,7 @@ if __name__ == '__main__':
 
     db = PostgreSQLDatabase()
     delete_files_and_download_files()
+    create_all_tables_for_db()
     db.connect()
     db.truncate_table('lessons_for_vstu')
     db.truncate_table('groups_vstu_and_others')
