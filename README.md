@@ -63,7 +63,11 @@
    ```shell
    # Windows
    python -m venv venv
-   venv\Scripts\activate.bat
+   .\venv\Scripts\Activate
+   ```
+   Если вдруг выдало ошибку, то пропишите в терминале (в диалоге введите `Y`)
+   ```shell
+   Set-ExecutionPolicy RemoteSigned
    ```
    ```shell
    # Linux:
@@ -89,7 +93,7 @@
    ```
    ```shell
    # Windows:
-   set PYTHONPATH=%cd%;%PYTHONPATH%
+   $env:PYTHONPATH = (Get-Location).Path
    ```
 ## Тестирование
 1. Поднимаем базу данных (на порту `5433`)

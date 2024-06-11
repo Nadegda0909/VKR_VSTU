@@ -1,4 +1,4 @@
-create table public.groups_vstu_and_others
+CREATE TABLE IF NOT EXISTS public.groups_vstu_and_others
 (
     group_name varchar(100) not null
         constraint groups_pkey
@@ -8,7 +8,7 @@ create table public.groups_vstu_and_others
     program    varchar(100) not null
 );
 
-create table public.learning_dates
+CREATE TABLE IF NOT EXISTS public.learning_dates
 (
     date     date    not null
         constraint learning_dates_pk
@@ -21,7 +21,7 @@ create table public.learning_dates
             check ((week_num >= 1) AND (week_num <= 2))
 );
 
-create table public.lessons_for_vstu
+CREATE TABLE IF NOT EXISTS public.lessons_for_vstu
 (
     lesson_id    integer default nextval('lessons_lesson_id_seq'::regclass) not null
         constraint lessons_pkey
@@ -38,7 +38,7 @@ create table public.lessons_for_vstu
             references public.learning_dates
 );
 
-create table public.students_ck
+CREATE TABLE IF NOT EXISTS public.students_ck
 (
     id                  integer default nextval('students_id_seq'::regclass) not null
         constraint students_pkey
@@ -53,7 +53,7 @@ create table public.students_ck
     ck_group            varchar(255)
 );
 
-create table public.lesson_intervals_for_vstu
+CREATE TABLE IF NOT EXISTS public.lesson_intervals_for_vstu
 (
     id              integer default nextval('lesson_intervals_id_seq'::regclass) not null
         constraint lesson_intervals_for_vstu_pk
@@ -68,7 +68,7 @@ create table public.lesson_intervals_for_vstu
     is_busy         boolean                                                      not null
 );
 
-create table public.lesson_intervals_for_ck
+CREATE TABLE IF NOT EXISTS public.lesson_intervals_for_ck
 (
     id              integer default nextval('new_lesson_intervals_id_seq'::regclass) not null
         constraint new_lesson_intervals_pkey
