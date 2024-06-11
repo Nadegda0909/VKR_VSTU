@@ -141,4 +141,4 @@
    ```
    При успешном выполнении:
 
-   Создается файл `group_ck.xlsx` в папке `backend/work_with_excel_rasp`
+   Создается файл `group_ck.xlsx` в папке `backend/work_with_ck_excel_rasp`
