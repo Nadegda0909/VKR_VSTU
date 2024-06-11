@@ -104,6 +104,9 @@
    ```shell
    python create_schedule.py 
    ```
+   При успешном выполнении:
+   
+   В БД таблица `lesson_intervals_for_ck` заполняется данными
 8. Перейдите в [папку](backend/work_with_ck_excel_rasp)
    ```shell
    cd ../work_with_excel_rasp
@@ -112,3 +115,6 @@
    ```shell
    python groups_ck_creator.py
    ```
+   При успешном выполнении:
+
+   Создается файл `group_ck.xlsx` в папке `backend/work_with_excel_rasp`
