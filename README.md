@@ -140,7 +140,10 @@
    В БД таблицы `groups_vstu_and_others`, `students_ck` заполнятся данными
 6. Запустите модуль создания групп и расписания для ЦК
    ```shell
-   python group_maker.py && python group_maker_for_others.py
+   python group_maker.py
+   ```
+   ```shell
+   python group_maker_for_others.py
    ```
 7. (Опционально) Запустите модуль для создания только расписания, если существуют группы ЦК
    ```shell
