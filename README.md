@@ -45,7 +45,7 @@
    ```
 4. Запускаете docker-compose
    ```shell
-   docker-compose up -d
+   docker-compose up -d --build
    ```
 5. Теперь открываете в браузере [ссылку](http://localhost:8082)
    
