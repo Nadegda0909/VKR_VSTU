@@ -2,6 +2,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from backend.work_with_excel_rasp.downloader import *
+
 app = FastAPI()
 
 app.add_middleware(
@@ -35,3 +37,11 @@ def login(request: LoginRequest):
         return {"status": "success"}
     else:
         raise HTTPException(status_code=401, detail="Invalid credentials")
+
+
+@app.post("/api/download_rasp")
+def download_rasp():
+    download_schedule_files(output_folder='work_with_excel_rasp/downloaded_files')
+    convert_xls_to_xlsx(input_folder='work_with_excel_rasp/downloaded_files', output_folder='work_with_excel_rasp'
+                                                                                            '/converted_files')
+    return {"status": "download completed"}

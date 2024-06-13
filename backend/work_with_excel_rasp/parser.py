@@ -707,7 +707,7 @@ if __name__ == '__main__':
     init()
 
     db = PostgreSQLDatabase()
-    delete_files_and_download_files()
+    # delete_files_and_download_files()
     create_all_tables_for_db()
     db.connect()
     db.truncate_table('lessons_for_vstu')

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Button, notification } from 'antd';
+import { Layout } from 'antd';
 import Header from './Header';
 import Login from './Login';
 import './App.css';
+import DownloadButton from "./Components/DownloadButton";
 
 const { Content } = Layout;
 
@@ -17,18 +18,6 @@ const App = () => {
         .then((data) => setData(data));
     }
   }, [authenticated]);
-
-  const handleClick = () => {
-    notification.open({
-      message: 'Заголовок уведомления',
-      description: 'Кнопка тыкнута и бэкенд об этом знает.',
-      placement: 'topLeft',  // Устанавливаем размещение уведомления в верхнем левом углу
-    });
-
-    fetch('/api/button-click', { method: 'POST' })
-      .then(response => response.json())
-      .then(data => console.log(data));
-  };
 
   const handleLogin = (values) => {
     console.log('Logged in with values:', values);
@@ -46,7 +35,7 @@ const App = () => {
         <div className="site-layout-content">
           <h1>Дипломная работа!</h1>
           {data ? <p>{data.message}</p> : <p>Loading...</p>}
-          <Button type="primary" onClick={handleClick}>Click Me</Button>
+          <DownloadButton />  {/* Используем новый компонент */}
         </div>
       </Content>
     </Layout>
