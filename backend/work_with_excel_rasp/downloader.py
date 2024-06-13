@@ -1,4 +1,5 @@
 import os  # Импорт модуля для работы с операционной системой
+import shutil
 from shutil import move
 from urllib.parse import urljoin  # Импорт функции для объединения URL-адресов
 import time
@@ -123,6 +124,17 @@ def convert_xls_to_xlsx(input_folder="downloaded_files", output_folder="converte
     print("--- %s seconds --- convertor" % (time.time() - t))
 
 
-if __name__ == "__main__":
+def delete_files_and_download_files():
+    items = os.listdir()
+    folders = [item for item in items if os.path.isdir(item) and "__" not in item]
+    for folder in folders:
+        try:
+            shutil.rmtree(folder)
+        except OSError as e:
+            print(f'{Fore.RED}Ошибка при удалении папки {folder} {e} {Style.RESET_ALL}')
     download_schedule_files()
     convert_xls_to_xlsx()
+
+
+if __name__ == "__main__":
+    delete_files_and_download_files()

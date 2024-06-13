@@ -12,7 +12,7 @@ from openpyxl import load_workbook
 from openpyxl.utils import coordinate_to_tuple, get_column_letter
 from collections import defaultdict
 from backend.database import PostgreSQLDatabase
-from backend.work_with_excel_rasp.downloader import download_schedule_files, convert_xls_to_xlsx
+from backend.work_with_excel_rasp.downloader import download_schedule_files, convert_xls_to_xlsx, delete_files_and_download_files
 
 
 def find_cells(sheet, values_to_find):
@@ -561,18 +561,6 @@ def analyze_excel_files_in_folder(folder_path):
     print(f"{Fore.GREEN}В базу занесены все группы!{Style.RESET_ALL}")
 
 
-def delete_files_and_download_files():
-    items = os.listdir()
-    folders = [item for item in items if os.path.isdir(item) and "__" not in item]
-    for folder in folders:
-        try:
-            shutil.rmtree(folder)
-        except OSError as e:
-            print(f'{Fore.RED}Ошибка при удалении папки {folder} {e} {Style.RESET_ALL}')
-    download_schedule_files()
-    convert_xls_to_xlsx()
-
-
 def create_table_lesson_intervals():
     print(f'{Fore.BLUE}Создается таблица с интервалами групп{Style.RESET_ALL}')
     db = PostgreSQLDatabase()
@@ -707,7 +695,7 @@ if __name__ == '__main__':
     init()
 
     db = PostgreSQLDatabase()
-    # delete_files_and_download_files()
+    delete_files_and_download_files()
     create_all_tables_for_db()
     db.connect()
     db.truncate_table('lessons_for_vstu')

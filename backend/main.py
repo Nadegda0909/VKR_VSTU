@@ -1,8 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-
+from sse_starlette.sse import EventSourceResponse
 from backend.work_with_excel_rasp.downloader import *
+import asyncio
 
 app = FastAPI()
 
@@ -39,9 +40,19 @@ def login(request: LoginRequest):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
 
-@app.post("/api/download_rasp")
-def download_rasp():
-    download_schedule_files(output_folder='work_with_excel_rasp/downloaded_files')
-    convert_xls_to_xlsx(input_folder='work_with_excel_rasp/downloaded_files', output_folder='work_with_excel_rasp'
-                                                                                            '/converted_files')
-    return {"status": "download completed"}
+async def download_and_convert_schedule():
+    yield {"event": "message", "data": "Скачивание файлов началось..."}
+    await asyncio.to_thread(download_schedule_files, output_folder='work_with_excel_rasp/downloaded_files')
+    yield {"event": "message", "data": "Файлы скачаны."}
+
+    yield {"event": "message", "data": "Конвертация файлов началась..."}
+    await asyncio.to_thread(convert_xls_to_xlsx, input_folder='work_with_excel_rasp/downloaded_files',
+                            output_folder='work_with_excel_rasp/converted_files')
+    yield {"event": "message", "data": "Файлы конвертированы."}
+
+    yield {"event": "message", "data": "done"}
+
+
+@app.get("/api/download_rasp")
+async def download_rasp():
+    return EventSourceResponse(download_and_convert_schedule())
