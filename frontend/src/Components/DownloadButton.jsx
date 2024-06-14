@@ -1,4 +1,5 @@
 import React from 'react';
+import { UploadOutlined } from '@ant-design/icons';
 import { Button, notification } from 'antd';
 
 const DownloadButton = () => {
@@ -30,7 +31,7 @@ const DownloadButton = () => {
   };
 
   return (
-    <Button type="primary" onClick={handleClick}>Загрузить</Button>
+    <Button icon={<UploadOutlined />} onClick={handleClick}>Загрузить</Button>
   );
 };
 
