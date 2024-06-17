@@ -85,15 +85,6 @@ def create_new_groups(db, students_by_program, all_free_intervals, group_size_li
 
 # Функция для обработки группы студентов
 def process_group(db, new_group_name, students, all_free_intervals, used_intervals, group_days, max_lessons_per_group):
-    # Добавляем новую группу в таблицу groups
-    db.execute_query(
-        '''
-        INSERT INTO groups_vstu_and_others (group_name, faculty, course, program)
-        VALUES (%s, %s, %s, %s)
-        ON CONFLICT (group_name) DO NOTHING;
-        ''',
-        (new_group_name, students[0][3], 1, students[0][5])
-    )
 
     lesson_count = 0
     for student in students:
