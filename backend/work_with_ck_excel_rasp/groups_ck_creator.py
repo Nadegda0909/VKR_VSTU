@@ -7,7 +7,7 @@ import time
 
 def select_ck_group_university_group(db):
     sql_query = '''
-    SELECT sc.ck_group, sc.oop_group_2023_2024
+    SELECT sc.ck_group, sc.oop_group_2023_2024, sc.university_name, sc.faculty
     FROM students_ck sc 
     ORDER BY sc.ck_group, sc.oop_group_2023_2024
     '''
@@ -17,13 +17,16 @@ def select_ck_group_university_group(db):
 
     # Инициализация пустого словаря
     ck_group_university_group = defaultdict(list)
+    group_university_info = {}
 
     # Заполняем словарь данными из запроса
-    for ck_group, oop_group in results:
+    for ck_group, oop_group, university_name, faculty in results:
         if oop_group not in ck_group_university_group[ck_group]:
             ck_group_university_group[ck_group].append(oop_group)
+        if university_name.lower() != 'волггту' or 'иаис' in university_name.lower() or 'иаис' in faculty.lower():
+            group_university_info[oop_group] = university_name
 
-    return ck_group_university_group
+    return ck_group_university_group, group_university_info
 
 
 def get_program_from_ck_group(ck_group):
@@ -50,7 +53,7 @@ def adjust_column_width(ws):
             ws.column_dimensions[column_letter].width = adjusted_width
 
 
-def make_excel(ck_group_university_group):
+def make_excel(ck_group_university_group, group_university_info):
     # Создаем новую книгу
     wb = Workbook()
 
@@ -96,7 +99,11 @@ def make_excel(ck_group_university_group):
             ck_cell.border = border
 
             for col, university_group in enumerate(ck_group_university_group[ck_group], start=2):
-                cell = ws.cell(row=row, column=col, value=university_group)
+                if university_group in group_university_info:
+                    cell_value = f"{university_group} ({group_university_info[university_group]})"
+                else:
+                    cell_value = university_group
+                cell = ws.cell(row=row, column=col, value=cell_value)
                 cell.font = cell_font
                 cell.border = border
 
@@ -138,8 +145,8 @@ if __name__ == '__main__':
     db = PostgreSQLDatabase()
     db.connect()
 
-    ck_group_university_group_dict = select_ck_group_university_group(db)
-    make_excel(ck_group_university_group_dict)
+    ck_group_university_group_dict, group_university_info = select_ck_group_university_group(db)
+    make_excel(ck_group_university_group_dict, group_university_info)
 
     db.disconnect()
     print("--- %s seconds --- group_ck_maker" % (time.time() - t))
