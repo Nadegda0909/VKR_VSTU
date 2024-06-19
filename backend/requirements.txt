@@ -9,3 +9,6 @@ xls2xlsx~=0.2.0
 uvicorn~=0.29.0
 python-dotenv
 sse-starlette
+fastapi-sessions
+itsdangerous
+starlette
