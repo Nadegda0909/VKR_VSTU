@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, notification } from 'antd';
-import Header from './Header';
-import Login from './Login';
+import { Layout } from 'antd';
+import Header from './Components/Header';
+import Login from './Components/Login';
 import './App.css';
 import DownloadButton from "./Components/DownloadButton";
 
@@ -24,14 +24,6 @@ const App = () => {
     setAuthenticated(true);
   };
 
-  const openNotification = (message) => {
-    notification.open({
-      message: 'Обновление процесса',
-      description: message,
-      placement: 'topLeft',
-    });
-  };
-
   if (!authenticated) {
     return <Login onLogin={handleLogin} />;
   }
@@ -43,7 +35,7 @@ const App = () => {
         <div className="site-layout-content">
           <h1>Дипломная работа!</h1>
           {data ? <p>{data.message}</p> : <p>Loading...</p>}
-          <DownloadButton openNotification={openNotification} />  {/* Передаем функцию уведомления */}
+          <DownloadButton />  {/* Используем обновленный компонент */}
         </div>
       </Content>
     </Layout>

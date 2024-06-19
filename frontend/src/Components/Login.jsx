@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, notification } from 'antd';
-import './Login.css';
+import '../Login.css';
 
 const Login = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
