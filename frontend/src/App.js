@@ -4,6 +4,7 @@ import Header from './Components/Header';
 import Login from './Components/Login';
 import './App.css';
 import DownloadButton from "./Components/DownloadButton";
+import UploadButton from "./Components/UploadButton";
 
 const { Content } = Layout;
 
@@ -35,7 +36,12 @@ const App = () => {
         <div className="site-layout-content">
           <h1>Дипломная работа!</h1>
           {data ? <p>{data.message}</p> : <p>Loading...</p>}
-          <DownloadButton />  {/* Используем обновленный компонент */}
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 20 }}>
+            <DownloadButton />  {/* Кнопка скачивания */}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <UploadButton />    {/* Кнопка загрузки */}
+          </div>
         </div>
       </Content>
     </Layout>

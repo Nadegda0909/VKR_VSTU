@@ -12,3 +12,4 @@ sse-starlette
 fastapi-sessions
 itsdangerous
 starlette
+python-multipart
