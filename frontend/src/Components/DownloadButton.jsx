@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UploadOutlined, LoadingOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { Button, Steps, notification } from 'antd';
+import '../DownloadButton.css';  // Импортируем стили
 
 const { Step } = Steps;
 
@@ -9,9 +10,7 @@ const DownloadButton = () => {
   const [stepStatus, setStepStatus] = useState('process');
 
   useEffect(() => {
-    fetch('/api/progress', {
-      credentials: 'include'  // Ensure cookies are included
-    })
+    fetch('/api/progress')
       .then(response => response.json())
       .then(data => {
         setCurrentStep(data.progress);
@@ -19,6 +18,8 @@ const DownloadButton = () => {
           setStepStatus('finish');
         } else if (data.progress > 0) {
           setStepStatus('process');
+        } else {
+          setStepStatus('wait');
         }
       });
   }, []);
@@ -26,7 +27,7 @@ const DownloadButton = () => {
   const handleClick = () => {
     const eventSource = new EventSource('/api/download_rasp');
 
-    setCurrentStep(1);  // Начато скачивание
+    setCurrentStep(1); // Начато скачивание
     setStepStatus('process');
 
     eventSource.onmessage = function(event) {
@@ -34,10 +35,12 @@ const DownloadButton = () => {
 
       if (event.data === 'Скачивание файлов началось...') {
         setCurrentStep(1);
+      } else if (event.data === 'Файлы скачаны.') {
+        setCurrentStep(2);
       } else if (event.data === 'Конвертация файлов началась...') {
         setCurrentStep(2);
       } else if (event.data === 'Файлы конвертированы.') {
-        setCurrentStep(3);
+        setCurrentStep(4);
       } else if (event.data === 'done') {
         setCurrentStep(4);
         notification.success({
@@ -64,7 +67,7 @@ const DownloadButton = () => {
 
   const getIcon = (step) => {
     if (step < currentStep) return <CheckOutlined />;
-    if (step === currentStep) return <LoadingOutlined />;
+    if (step === currentStep && stepStatus === 'process') return <LoadingOutlined />;
     if (stepStatus === 'error') return <CloseOutlined />;
     return null;
   };
@@ -72,7 +75,7 @@ const DownloadButton = () => {
   return (
     <div style={{ display: 'flex', alignItems: 'center' }}>
       <Button icon={<UploadOutlined />} onClick={handleClick} style={{ marginRight: 20 }}>Загрузить</Button>
-      <Steps current={currentStep} status={stepStatus} direction="horizontal" style={{ flex: 1 }}>
+      <Steps current={currentStep} status={stepStatus} className="custom-steps">
         <Step title="Ожидание запроса" icon={getIcon(0)} />
         <Step title="Скачивание" icon={getIcon(1)} />
         <Step title="Конвертация" icon={getIcon(2)} />

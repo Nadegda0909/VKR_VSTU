@@ -1,37 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout, Menu } from 'antd';
-import { TableOutlined, SnippetsOutlined, RiseOutlined, ClusterOutlined } from '@ant-design/icons';
+import { SnippetsOutlined, RiseOutlined, ClusterOutlined } from '@ant-design/icons';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const { Header: AntHeader } = Layout;
 
 const items = [
   {
-    label: 'Файлы',
-    key: 'files',
+    label: 'Загрузка',
+    key: 'upload',
     icon: <SnippetsOutlined />,
   },
   {
-    label: 'Анализ',
+    label: 'Обработка',
     key: 'analyze',
     icon: <RiseOutlined />,
   },
   {
-    label: 'Направления',
-    key: 'napravlen',
+    label: 'Скачивание',
+    key: 'download',
     icon: <ClusterOutlined />,
-  },
-  {
-    label: 'Расписания',
-    key: 'raspis',
-    icon: <TableOutlined />,
   },
 ];
 
 const Header = () => {
-  const [current, setCurrent] = useState('files');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [current, setCurrent] = useState('upload');
+
+  useEffect(() => {
+    const path = location.pathname.substring(1);
+    if (path) {
+      setCurrent(path);
+    } else {
+      navigate('/upload');
+    }
+  }, [location, navigate]);
+
   const onClick = (e) => {
-    console.log('click ', e);
     setCurrent(e.key);
+    navigate(`/${e.key}`);
   };
 
   return (

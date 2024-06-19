@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Layout } from 'antd';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './Components/Header';
 import Login from './Components/Login';
+import UploadPage from './Components/UploadPage';
+import AnalyzePage from './Components/AnalyzePage';
+import DownloadPage from './Components/DownloadPage';
 import './App.css';
-import DownloadButton from "./Components/DownloadButton";
-import UploadButton from "./Components/UploadButton";
-import { Typography } from 'antd';
-const { Title, Text } = Typography;
 
 const { Content } = Layout;
 
@@ -32,23 +32,19 @@ const App = () => {
   }
 
   return (
-    <Layout className="layout">
-      <Header />
-      <Content style={{ padding: '0 25px', marginTop: '64px' }}>
-        <div className="site-layout-content">
-          <Title level={2}>Необходимые файлы</Title>
-          <Title level={3}>Расписание ВолгГТУ</Title>
-          <Text>C сайта ВУЗа</Text>
-          <div style={{ display: 'flex', marginBottom: 20 }}>
-            <DownloadButton />  {/* Кнопка скачивания */}
-          </div>
-          <Title level={3}>Список студентов</Title>
-          <div style={{ display: 'flex' }}>
-            <UploadButton />    {/* Кнопка загрузки */}
-          </div>
-        </div>
-      </Content>
-    </Layout>
+    <Router>
+      <Layout className="layout">
+        <Header />
+        <Content style={{ padding: '0 25px', marginTop: '64px' }}>
+          <Routes>
+            <Route path="/" element={<Navigate to="/upload" />} />
+            <Route path="/upload" element={<UploadPage />} />
+            <Route path="/analyze" element={<AnalyzePage />} />
+            <Route path="/download" element={<DownloadPage />} />
+          </Routes>
+        </Content>
+      </Layout>
+    </Router>
   );
 };
 

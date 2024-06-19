@@ -38,13 +38,34 @@ const UploadButton = () => {
       });
 
       if (response.status === 200) {
-        setCurrentStep(2); // Файл загружен успешно
-        notification.success({
-          message: 'Успешно',
-          description: 'Файл успешно загружен!',
-          placement: 'topLeft',
-        });
-        setStepStatus('finish');
+        const eventSource = new EventSource('/api/upload_progress');
+        eventSource.onmessage = function(event) {
+          console.log('Received:', event.data);
+
+          if (event.data === 'Файл загружен') {
+            setCurrentStep(2);
+            notification.success({
+              message: 'Успешно',
+              description: 'Файл успешно загружен!',
+              placement: 'topLeft',
+            });
+            setStepStatus('finish');
+            eventSource.close();
+          } else {
+            setCurrentStep(1);
+          }
+        };
+
+        eventSource.onerror = function() {
+          console.error('EventSource failed.');
+          notification.error({
+            message: 'Ошибка',
+            description: 'Произошла ошибка при загрузке файла',
+            placement: 'topLeft',
+          });
+          setStepStatus('error');
+          eventSource.close();
+        };
       } else {
         throw new Error('Upload failed');
       }

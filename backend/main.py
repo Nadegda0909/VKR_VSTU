@@ -24,18 +24,22 @@ app.add_middleware(SessionMiddleware, secret_key="!secret")
 
 app.state.session_store = {}
 
+
 class LoginRequest(BaseModel):
     username: str
     password: str
+
 
 @app.get("/api/data")
 def read_root():
     return {"message": "Тестовое сообщение!"}
 
+
 @app.post("/api/button-click")
 def button_click():
     print("Button was clicked")
     return {"status": "Button click received"}
+
 
 @app.post("/api/login")
 def login(request: LoginRequest):
@@ -43,6 +47,20 @@ def login(request: LoginRequest):
         return {"status": "success"}
     else:
         raise HTTPException(status_code=401, detail="Invalid credentials")
+
+
+async def upload_file_progress(session_id: str):
+    session = json.loads(app.state.session_store.get(session_id, '{}'))
+    session['progress_upload'] = 1
+    app.state.session_store[session_id] = json.dumps(session)
+    yield {"event": "message", "data": "Файл загружается"}
+
+    await asyncio.sleep(2)  # Замените это реальной логикой загрузки файла
+
+    session['progress_upload'] = 2
+    app.state.session_store[session_id] = json.dumps(session)
+    yield {"event": "message", "data": "Файл загружен"}
+
 
 @app.post("/api/upload")
 async def upload_file(request: Request, file: UploadFile = File(...)):
@@ -60,18 +78,26 @@ async def upload_file(request: Request, file: UploadFile = File(...)):
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    session = json.loads(app.state.session_store.get(session_id, '{}'))
-    session['progress_upload'] = 2
-    app.state.session_store[session_id] = json.dumps(session)
+    return EventSourceResponse(upload_file_progress(session_id))
 
-    return {"status": "file uploaded"}
+
+@app.get("/api/upload_progress")
+async def get_upload_progress(request: Request):
+    session_id = request.cookies.get("session")
+    if not session_id:
+        return {"progress": 0}
+    return EventSourceResponse(upload_file_progress(session_id))
+
 
 @app.get("/api/progress_upload")
 def get_progress_upload(request: Request):
     session_id = request.cookies.get("session")
+    if not session_id:
+        return {"progress": 0}
     session = json.loads(app.state.session_store.get(session_id, '{}'))
     progress = session.get('progress_upload', 0)
     return {"progress": progress}
+
 
 def delete_dirs_in_path(path: str):
     items = os.listdir(path=path)
@@ -83,6 +109,7 @@ def delete_dirs_in_path(path: str):
             print(f'{Fore.GREEN}Папка {folder_path} успешно удалена{Style.RESET_ALL}')
         except OSError as e:
             print(f'{Fore.RED}Ошибка при удалении папки {folder_path}: {e}{Style.RESET_ALL}')
+
 
 async def download_and_convert_schedule(session_id: str):
     await asyncio.to_thread(delete_dirs_in_path, path='work_with_excel_rasp')
@@ -106,20 +133,24 @@ async def download_and_convert_schedule(session_id: str):
     app.state.session_store[session_id] = json.dumps(session)
     yield {"event": "message", "data": "done"}
 
+
 @app.get("/api/download_rasp")
 async def download_rasp(request: Request):
     session_id = request.cookies.get("session")
     if not session_id:
         session_id = str(uuid.uuid4())
-        response = Response()
+        response = Response(content=json.dumps({"status": "new session"}), media_type="application/json")
         response.set_cookie(key="session", value=session_id)
         app.state.session_store[session_id] = json.dumps({"progress": 0})
         return response
     return EventSourceResponse(download_and_convert_schedule(session_id))
 
+
 @app.get("/api/progress")
 def get_progress(request: Request):
     session_id = request.cookies.get("session")
+    if not session_id:
+        return {"progress": 0}
     session = json.loads(app.state.session_store.get(session_id, '{}'))
     progress = session.get('progress', 0)
     return {"progress": progress}
