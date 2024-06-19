@@ -5,6 +5,8 @@ import Login from './Components/Login';
 import './App.css';
 import DownloadButton from "./Components/DownloadButton";
 import UploadButton from "./Components/UploadButton";
+import { Typography } from 'antd';
+const { Title, Text } = Typography;
 
 const { Content } = Layout;
 
@@ -32,14 +34,16 @@ const App = () => {
   return (
     <Layout className="layout">
       <Header />
-      <Content style={{ padding: '0 25px', textAlign: 'center', marginTop: '64px' }}>
+      <Content style={{ padding: '0 25px', marginTop: '64px' }}>
         <div className="site-layout-content">
-          <h1>Дипломная работа!</h1>
-          {data ? <p>{data.message}</p> : <p>Loading...</p>}
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 20 }}>
+          <Title level={2}>Необходимые файлы</Title>
+          <Title level={3}>Расписание ВолгГТУ</Title>
+          <Text>C сайта ВУЗа</Text>
+          <div style={{ display: 'flex', marginBottom: 20 }}>
             <DownloadButton />  {/* Кнопка скачивания */}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <Title level={3}>Список студентов</Title>
+          <div style={{ display: 'flex' }}>
             <UploadButton />    {/* Кнопка загрузки */}
           </div>
         </div>
