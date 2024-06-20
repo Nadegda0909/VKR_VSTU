@@ -146,15 +146,13 @@ def process_group(db, new_group_name, students, all_free_intervals, used_interva
                 lesson_count += 1
 
 
-if __name__ == "__main__":
+def run():
     t = time.time()
     db = PostgreSQLDatabase()
     db.connect()
-
     students = fetch_other_students(db)
     students_by_program_and_university = defaultdict(lambda: defaultdict(list))
     exempt_universities = {'кти', 'впи', 'иаис', 'сф'}
-
     for student in students:
         program = student[5]
         university = student[2].lower()
@@ -163,9 +161,11 @@ if __name__ == "__main__":
             students_by_program_and_university[program][university].append(student)
         else:
             students_by_program_and_university[program]['other'].append(student)
-
     all_free_intervals = fetch_all_free_intervals(db)
     create_new_groups(db, students_by_program_and_university, all_free_intervals, group_size_limit=20)
-
     db.disconnect()
     print("--- %s seconds --- group_maker_for_other_universities" % (time.time() - t))
+
+
+if __name__ == "__main__":
+    run()

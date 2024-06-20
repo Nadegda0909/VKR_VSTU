@@ -74,8 +74,8 @@ const VstuGroupMakerButton = () => {
       <Button icon={<PlayCircleOutlined />} onClick={handleClick} style={{ marginRight: 20 }}>Создать группы и расписание ЦК для ВолгГТУ</Button>
       <Steps current={currentStep} status={stepStatus} className="custom-steps">
         <Step title="Ожидание запроса" icon={getIcon(0)} />
-        <Step title="Создание групп и расписания для ВолгГТУ" icon={getIcon(1)} />
-        <Step title="Списки групп и расписание для ВолгГТУ созданы" icon={getIcon(2)} />
+        <Step title="Создание групп и расписания" icon={getIcon(1)} />
+        <Step title="Списки групп и расписание созданы" icon={getIcon(2)} />
       </Steps>
     </div>
   );

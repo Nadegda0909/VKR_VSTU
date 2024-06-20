@@ -3,6 +3,7 @@ import { Typography } from 'antd';
 import ParserButton from "./ParserButton";
 import GroupParserButton from "./GroupParserButton";
 import VstuGroupMakerButton from "./VstuGroupMakerButton";
+import OthersGroupMakerButton from "./OthersGroupMakerButton";
 const { Title } = Typography;
 
 const AnalyzePage = () => {
@@ -14,6 +15,7 @@ const AnalyzePage = () => {
       <GroupParserButton />
       <Title level={3}>Группы цифровой кафедры</Title>
       <VstuGroupMakerButton />
+      <OthersGroupMakerButton />
     </div>
   );
 };

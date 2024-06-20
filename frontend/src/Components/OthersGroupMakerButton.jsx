@@ -5,18 +5,18 @@ import '../ParserButton.css';
 
 const { Step } = Steps;
 
-const ParserButton = () => {
+const OthersGroupMakerButton = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [stepStatus, setStepStatus] = useState('process');
 
   useEffect(() => {
-    fetch('/api/parser_progress')
+    fetch('/api/group_maker_for_others_progress')
       .then(response => response.json())
       .then(data => {
-        setCurrentStep(data.parser_progress);
-        if (data.parser_progress === 4) {
+        setCurrentStep(data.group_maker_for_others_progress);
+        if (data.group_maker_for_others_progress === 4) {
           setStepStatus('finish');
-        } else if (data.parser_progress > 0) {
+        } else if (data.group_maker_for_others_progress > 0) {
           setStepStatus('process');
         } else {
           setStepStatus('wait');
@@ -25,7 +25,7 @@ const ParserButton = () => {
   }, []);
 
   const handleClick = () => {
-    const eventSource = new EventSource('/api/run_parser');
+    const eventSource = new EventSource('/api/run_group_maker_for_others');
 
     setCurrentStep(1); // Начат запуск парсера
     setStepStatus('process');
@@ -33,18 +33,18 @@ const ParserButton = () => {
     eventSource.onmessage = function(event) {
       console.log('Received:', event.data);
 
-      if (event.data === 'Запуск парсера...') {
+      if (event.data === 'Создаются группы и расписание для ВолгГТУ...') {
         setCurrentStep(1);
-      } else if (event.data === 'Парсер успешно завершен.') {
+      } else if (event.data === 'Группы и расписание для ВолгГТУ созданы.') {
         setCurrentStep(4);
         notification.success({
           message: 'Успешно',
-          description: 'Расписание ВолгГТУ обработано!',
+          description: 'Группы и расписание для ВолгГТУ созданы!',
           placement: 'topLeft',
         });
         setStepStatus('finish');
         eventSource.close();
-      } else if (event.data === 'Ошибка при выполнении парсера.') {
+      } else if (event.data === 'Ошибка при создании групп и расписания для ВолгГТУ.') {
         setStepStatus('error');
         eventSource.close();
       }
@@ -71,14 +71,14 @@ const ParserButton = () => {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center' }}>
-      <Button icon={<PlayCircleOutlined />} onClick={handleClick} style={{ marginRight: 20 }}>Обработать расписание ВолгГТУ</Button>
+      <Button icon={<PlayCircleOutlined />} onClick={handleClick} style={{ marginRight: 20 }}>Создать группы и расписание ЦК для остальных университетов</Button>
       <Steps current={currentStep} status={stepStatus} className="custom-steps">
         <Step title="Ожидание запроса" icon={getIcon(0)} />
-        <Step title="Обработка расписания ВолгГТУ" icon={getIcon(1)} />
-        <Step title="Расписание ВолгГТУ обработано" icon={getIcon(2)} />
+        <Step title="Создание групп и расписания" icon={getIcon(1)} />
+        <Step title="Списки групп и расписание созданы" icon={getIcon(2)} />
       </Steps>
     </div>
   );
 };
 
-export default ParserButton;
+export default OthersGroupMakerButton;
