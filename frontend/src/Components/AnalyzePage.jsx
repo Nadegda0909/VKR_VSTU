@@ -4,6 +4,8 @@ import ParserButton from "./ParserButton";
 import GroupParserButton from "./GroupParserButton";
 import VstuGroupMakerButton from "./VstuGroupMakerButton";
 import OthersGroupMakerButton from "./OthersGroupMakerButton";
+import RaspCreatorButton from "./RaspCreatorButton";
+import GroupCreatorButton from "./GroupCreatorButton";
 const { Title } = Typography;
 
 const AnalyzePage = () => {
@@ -16,6 +18,10 @@ const AnalyzePage = () => {
       <Title level={3}>Группы цифровой кафедры</Title>
       <VstuGroupMakerButton />
       <OthersGroupMakerButton />
+      <Title level={3}>Сформировать Excel для расписания</Title>
+      <RaspCreatorButton />
+      <Title level={3}>Сформировать Excel для групп</Title>
+      <GroupCreatorButton />
     </div>
   );
 };

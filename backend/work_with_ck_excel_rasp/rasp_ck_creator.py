@@ -69,7 +69,9 @@ def adjust_column_width(ws):
             ws.column_dimensions[column_letter].width = adjusted_width
 
 
-def make_schedule_excel(lesson_intervals):
+def make_schedule_excel(lesson_intervals, path: str):
+    db = PostgreSQLDatabase()
+    db.connect()
     wb = Workbook()
 
     # Определяем стили
@@ -152,16 +154,19 @@ def make_schedule_excel(lesson_intervals):
         std = wb['Sheet']
         wb.remove(std)
 
-    wb.save("schedule_ck.xlsx")
+    wb.save(f"{path}schedule_ck.xlsx")
+    db.disconnect()
 
 
-if __name__ == '__main__':
+def run(path: str = '.'):
     t = time.time()
     db = PostgreSQLDatabase()
     db.connect()
-
     lesson_intervals = fetch_lesson_intervals(db)
-    make_schedule_excel(lesson_intervals)
-
+    make_schedule_excel(lesson_intervals, path=path)
     db.disconnect()
-    print("--- %s seconds --- schedule_maker" % (time.time() - t))
+    print("--- %s seconds --- rasp_ck_maker" % (time.time() - t))
+
+
+if __name__ == '__main__':
+    run()

@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from starlette.middleware.sessions import SessionMiddleware
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
@@ -13,6 +14,8 @@ from backend.work_with_excel_rasp.parser import run as run_parser_from_file
 from backend.work_with_excel_groups.group_parser import run as run_group_parser_from_file
 from backend.work_with_excel_groups.group_maker import run as run_group_maker_vstu_from_file
 from backend.work_with_excel_groups.group_maker_for_others import run as run_group_maker_for_others_from_file
+from backend.work_with_ck_excel_rasp.rasp_ck_creator import run as run_ck_rasp_creator_from_file
+from backend.work_with_ck_excel_rasp.groups_ck_creator import run as run_ck_groups_creator_from_file
 
 app = FastAPI()
 
@@ -290,3 +293,81 @@ def get_group_maker_for_others_progress(request: Request):
     session = json.loads(app.state.session_store.get(session_id, '{}'))
     progress = session.get('group_maker_for_others_progress', 0)
     return {"group_maker_for_others_progress": progress}
+
+
+async def run_ck_excel_rasp(session_id: str):
+    session = json.loads(app.state.session_store.get(session_id, '{}'))
+    session['ck_excel_rasp_progress'] = 1
+    app.state.session_store[session_id] = json.dumps(session)
+    yield {"event": "message", "data": "Создается Excel-файл с расписанием..."}
+
+    await asyncio.to_thread(run_ck_rasp_creator_from_file, path='work_with_ck_excel_rasp/')
+
+    session['ck_excel_rasp_progress'] = 4
+    app.state.session_store[session_id] = json.dumps(session)
+    yield {"event": "message", "data": "Excel-файл с расписанием создан."}
+
+
+@app.get("/api/run_ck_excel_rasp")
+async def run_ck_excel_rasp_endpoint(request: Request):
+    session_id = request.cookies.get("session")
+    if not session_id:
+        session_id = str(uuid.uuid4())
+        response = Response()
+        response.set_cookie(key="session", value=session_id)
+        app.state.session_store[session_id] = json.dumps({"ck_excel_rasp_progress": 0})
+        return response
+    return EventSourceResponse(run_ck_excel_rasp(session_id))
+
+
+@app.get("/api/ck_excel_rasp_progress")
+def get_ck_excel_rasp_progress(request: Request):
+    session_id = request.cookies.get("session")
+    session = json.loads(app.state.session_store.get(session_id, '{}'))
+    progress = session.get('ck_excel_rasp_progress', 0)
+    return {"ck_excel_rasp_progress": progress}
+
+
+async def run_ck_excel_group(session_id: str):
+    session = json.loads(app.state.session_store.get(session_id, '{}'))
+    session['ck_excel_group_progress'] = 1
+    app.state.session_store[session_id] = json.dumps(session)
+    yield {"event": "message", "data": "Создается Excel-файл со списком групп..."}
+
+    await asyncio.to_thread(run_ck_groups_creator_from_file, path='work_with_ck_excel_rasp/')
+
+    session['ck_excel_group_progress'] = 4
+    app.state.session_store[session_id] = json.dumps(session)
+    yield {"event": "message", "data": "Excel-файл со списком групп создан."}
+
+
+@app.get("/api/run_ck_excel_group")
+async def run_ck_excel_group_endpoint(request: Request):
+    session_id = request.cookies.get("session")
+    if not session_id:
+        session_id = str(uuid.uuid4())
+        response = Response()
+        response.set_cookie(key="session", value=session_id)
+        app.state.session_store[session_id] = json.dumps({"ck_excel_group_progress": 0})
+        return response
+    return EventSourceResponse(run_ck_excel_group(session_id))
+
+
+@app.get("/api/ck_excel_group_progress")
+def get_ck_excel_group_progress(request: Request):
+    session_id = request.cookies.get("session")
+    session = json.loads(app.state.session_store.get(session_id, '{}'))
+    progress = session.get('ck_excel_group_progress', 0)
+    return {"ck_excel_group_progress": progress}
+
+
+@app.get("/api/download_file")
+def download_file():
+    file_path = "work_with_ck_excel_rasp/schedule_ck.xlsx"  # Путь к файлу на сервере
+    return FileResponse(path=file_path, filename="schedule_ck.xlsx", media_type='application/octet-stream')
+
+
+@app.get("/api/download_group_file")
+def download_file():
+    file_path = "work_with_ck_excel_rasp/group_ck.xlsx"  # Путь к файлу на сервере
+    return FileResponse(path=file_path, filename="group_ck.xlsx", media_type='application/octet-stream')

@@ -53,7 +53,9 @@ def adjust_column_width(ws):
             ws.column_dimensions[column_letter].width = adjusted_width
 
 
-def make_excel(ck_group_university_group, group_university_info):
+def make_excel(ck_group_university_group, group_university_info, path: str):
+    db = PostgreSQLDatabase()
+    db.connect()
     # Создаем новую книгу
     wb = Workbook()
 
@@ -137,16 +139,19 @@ def make_excel(ck_group_university_group, group_university_info):
         wb.remove(std)
 
     # Сохраняем книгу
-    wb.save("group_ck.xlsx")
+    wb.save(f"{path}group_ck.xlsx")
+    db.disconnect()
 
 
-if __name__ == '__main__':
+def run(path: str = '.'):
     t = time.time()
     db = PostgreSQLDatabase()
     db.connect()
-
     ck_group_university_group_dict, group_university_info = select_ck_group_university_group(db)
-    make_excel(ck_group_university_group_dict, group_university_info)
-
+    make_excel(ck_group_university_group_dict, group_university_info, path=path)
     db.disconnect()
     print("--- %s seconds --- group_ck_maker" % (time.time() - t))
+
+
+if __name__ == '__main__':
+    run()
