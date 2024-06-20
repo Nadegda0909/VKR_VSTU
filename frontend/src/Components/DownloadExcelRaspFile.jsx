@@ -34,7 +34,7 @@ const DownloadExcelRaspFile = () => {
   };
 
   return (
-      <Button icon={<DownloadOutlined />} onClick={handleDownload}>Скачать файл</Button>
+      <Button icon={<DownloadOutlined />} onClick={handleDownload}>Скачать</Button>
   );
 };
 

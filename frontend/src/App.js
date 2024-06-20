@@ -3,9 +3,9 @@ import { Layout } from 'antd';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './Components/Header';
 import Login from './Components/Login';
-import UploadPage from './Components/UploadPage';
-import AnalyzePage from './Components/AnalyzePage';
-import DownloadPage from './Components/DownloadPage';
+import UploadPage from './Pages/UploadPage';
+import AnalyzePage from './Pages/AnalyzePage';
+import DownloadPage from './Pages/DownloadPage';
 import './App.css';
 
 const { Content } = Layout;
