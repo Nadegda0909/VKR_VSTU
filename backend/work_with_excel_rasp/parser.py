@@ -12,7 +12,8 @@ from openpyxl import load_workbook
 from openpyxl.utils import coordinate_to_tuple, get_column_letter
 from collections import defaultdict
 from backend.database import PostgreSQLDatabase
-from backend.work_with_excel_rasp.downloader import download_schedule_files, convert_xls_to_xlsx, delete_files_and_download_files
+from backend.work_with_excel_rasp.downloader import download_schedule_files, convert_xls_to_xlsx, \
+    delete_files_and_download_files
 
 
 def find_cells(sheet, values_to_find):
@@ -231,6 +232,9 @@ def analyze_dates(
     # Загрузка файла Excel
     workbook = load_workbook(filename=filename)
 
+    db = PostgreSQLDatabase()
+    db.connect()
+
     # Получение активного листа
     sheet = workbook.active
     month_names = {
@@ -293,6 +297,7 @@ def analyze_dates(
         work_cell = move_cell_down(work_cell, 1)
     # print(dates)
     print(f"{Fore.GREEN}Даты сформированы! {Style.RESET_ALL}")
+    db.disconnect()
 
 
 def get_course(group_name):
@@ -689,21 +694,27 @@ def create_all_tables_for_db():
     print(f'{Fore.CYAN}Таблички созданы!{Style.RESET_ALL}')
 
 
-if __name__ == '__main__':
+def run(path_to_excel_files: str):
     t = time.time()
     # Инициализация colorama (необходимо вызывать один раз в начале программы)
     init()
 
     db = PostgreSQLDatabase()
-    delete_files_and_download_files()
+    # delete_files_and_download_files()
     create_all_tables_for_db()
     db.connect()
     db.truncate_table('lessons_for_vstu')
     db.truncate_table('groups_vstu_and_others')
     db.truncate_table('learning_dates')
     db.truncate_table('lesson_intervals_for_vstu')
-    analyze_dates()
+    analyze_dates(filename=f'{path_to_excel_files}/Бакалавриат, специалитет/'
+                           'Факультет автоматизированных систем, транспорта и вооружений/'
+                           'ОН_ФАСТИВ_3 курс (320-324).xlsx')
     analyze_excel_files_in_folder(
-        'converted_files/')
+        path_to_excel_files, )
     create_table_lesson_intervals()
     print("--- %s seconds --- parser" % (time.time() - t))
+
+
+if __name__ == '__main__':
+    run(path_to_excel_files='./converted_files')

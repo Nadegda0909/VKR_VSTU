@@ -9,6 +9,7 @@ import asyncio
 import json
 import uuid
 from backend.work_with_excel_rasp.downloader import *
+from backend.work_with_excel_rasp.parser import run as run_parser_from_file
 
 app = FastAPI()
 
@@ -154,3 +155,36 @@ def get_progress(request: Request):
     session = json.loads(app.state.session_store.get(session_id, '{}'))
     progress = session.get('progress', 0)
     return {"progress": progress}
+
+
+async def run_parser(session_id: str):
+    session = json.loads(app.state.session_store.get(session_id, '{}'))
+    session['parser_progress'] = 1
+    app.state.session_store[session_id] = json.dumps(session)
+    yield {"event": "message", "data": "Запуск парсера..."}
+
+    await asyncio.to_thread(run_parser_from_file, path_to_excel_files='work_with_excel_rasp/converted_files')
+
+    session['parser_progress'] = 4
+    app.state.session_store[session_id] = json.dumps(session)
+    yield {"event": "message", "data": "Парсер успешно завершен."}
+
+
+@app.get("/api/run_parser")
+async def run_parser_endpoint(request: Request):
+    session_id = request.cookies.get("session")
+    if not session_id:
+        session_id = str(uuid.uuid4())
+        response = Response()
+        response.set_cookie(key="session", value=session_id)
+        app.state.session_store[session_id] = json.dumps({"parser_progress": 0})
+        return response
+    return EventSourceResponse(run_parser(session_id))
+
+
+@app.get("/api/parser_progress")
+def get_parser_progress(request: Request):
+    session_id = request.cookies.get("session")
+    session = json.loads(app.state.session_store.get(session_id, '{}'))
+    progress = session.get('parser_progress', 0)
+    return {"parser_progress": progress}
