@@ -10,6 +10,8 @@ import json
 import uuid
 from backend.work_with_excel_rasp.downloader import *
 from backend.work_with_excel_rasp.parser import run as run_parser_from_file
+from backend.work_with_excel_groups.group_parser import run as run_group_parser_from_file
+from backend.work_with_excel_groups.group_maker import run as run_group_maker_from_file
 
 app = FastAPI()
 
@@ -188,3 +190,69 @@ def get_parser_progress(request: Request):
     session = json.loads(app.state.session_store.get(session_id, '{}'))
     progress = session.get('parser_progress', 0)
     return {"parser_progress": progress}
+
+
+async def run_group_parser(session_id: str):
+    session = json.loads(app.state.session_store.get(session_id, '{}'))
+    session['group_parser_progress'] = 1
+    app.state.session_store[session_id] = json.dumps(session)
+    yield {"event": "message", "data": "Запуск парсера для групп..."}
+
+    await asyncio.to_thread(run_group_parser_from_file, path='work_with_excel_groups')
+
+    session['group_parser_progress'] = 4
+    app.state.session_store[session_id] = json.dumps(session)
+    yield {"event": "message", "data": "Парсер успешно завершен."}
+
+
+@app.get("/api/run_group_parser")
+async def run_group_parser_endpoint(request: Request):
+    session_id = request.cookies.get("session")
+    if not session_id:
+        session_id = str(uuid.uuid4())
+        response = Response()
+        response.set_cookie(key="session", value=session_id)
+        app.state.session_store[session_id] = json.dumps({"group_parser_progress": 0})
+        return response
+    return EventSourceResponse(run_group_parser(session_id))
+
+
+@app.get("/api/group_parser_progress")
+def get_group_parser_progress(request: Request):
+    session_id = request.cookies.get("session")
+    session = json.loads(app.state.session_store.get(session_id, '{}'))
+    progress = session.get('group_parser_progress', 0)
+    return {"group_parser_progress": progress}
+
+
+async def run_group_maker_vstu(session_id: str):
+    session = json.loads(app.state.session_store.get(session_id, '{}'))
+    session['group_maker_vstu_progress'] = 1
+    app.state.session_store[session_id] = json.dumps(session)
+    yield {"event": "message", "data": "Создаются группы и расписание для ВолгГТУ..."}
+
+    await asyncio.to_thread(run_group_maker_from_file)
+
+    session['group_maker_vstu_progress'] = 4
+    app.state.session_store[session_id] = json.dumps(session)
+    yield {"event": "message", "data": "Группы и расписание для ВолгГТУ созданы."}
+
+
+@app.get("/api/run_group_maker_vstu")
+async def run_group_maker_vstu_endpoint(request: Request):
+    session_id = request.cookies.get("session")
+    if not session_id:
+        session_id = str(uuid.uuid4())
+        response = Response()
+        response.set_cookie(key="session", value=session_id)
+        app.state.session_store[session_id] = json.dumps({"group_maker_vstu_progress": 0})
+        return response
+    return EventSourceResponse(run_group_maker_vstu(session_id))
+
+
+@app.get("/api/group_maker_vstu_progress")
+def get_group_maker_vstu_progress(request: Request):
+    session_id = request.cookies.get("session")
+    session = json.loads(app.state.session_store.get(session_id, '{}'))
+    progress = session.get('group_maker_vstu_progress', 0)
+    return {"group_maker_vstu_progress": progress}

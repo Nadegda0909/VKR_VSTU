@@ -80,13 +80,16 @@ def find_csv_files(directory):
     return csv_files[0]
 
 
-# Пример использования
-if __name__ == "__main__":
+def run(path: str = '.'):
     t = time.time()
-    csv_file = find_csv_files('.')
+    csv_file = find_csv_files(path)
     table_name = "students_ck"
-
     # Создаем объект класса PostgreSQLDatabase
     db = PostgreSQLDatabase()
     load_csv_to_database(csv_file, table_name, db)
     print("--- %s seconds --- group_parser" % (time.time() - t))
+
+
+# Пример использования
+if __name__ == "__main__":
+    run()

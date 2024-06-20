@@ -127,12 +127,11 @@ def process_group(db, new_group_name, students, all_free_intervals, used_interva
                 lesson_count += 1
 
 
-if __name__ == "__main__":
+def run():
     t = time.time()
     db = PostgreSQLDatabase()
     db.connect()
     minims = []
-
     all_free_intervals = fetch_all_free_intervals(db)
     for group_limit in range(20, 25 + 1):
         db.truncate_table('lesson_intervals_for_ck')
@@ -149,7 +148,6 @@ if __name__ == "__main__":
             GROUP BY ck_group
         ) AS group_counts;
         '''))
-
     # Находим наилучший лимит размера группы
     best_limit = minims.index(max(minims))
     db.truncate_table('lesson_intervals_for_ck')
@@ -160,3 +158,7 @@ if __name__ == "__main__":
     create_new_groups(db, students_by_program, all_free_intervals, 20 + best_limit)
     db.disconnect()
     print("--- %s seconds --- group_maker" % (time.time() - t))
+
+
+if __name__ == "__main__":
+    run()
