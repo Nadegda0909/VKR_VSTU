@@ -236,6 +236,7 @@ async def run_group_maker_vstu(session_id: str):
     yield {"event": "message", "data": "Создаются группы и расписание для ВолгГТУ..."}
 
     await asyncio.to_thread(run_group_maker_vstu_from_file)
+    await asyncio.to_thread(run_group_maker_for_others_from_file)
 
     session['group_maker_vstu_progress'] = 4
     app.state.session_store[session_id] = json.dumps(session)

@@ -39,12 +39,12 @@ const VstuGroupMakerButton = () => {
         setCurrentStep(4);
         notification.success({
           message: 'Успешно',
-          description: 'Группы и расписание для ВолгГТУ созданы!',
+          description: 'Группы ЦК созданы!',
           placement: 'topLeft',
         });
         setStepStatus('finish');
         eventSource.close();
-      } else if (event.data === 'Ошибка при создании групп и расписания для ВолгГТУ.') {
+      } else if (event.data === 'Ошибка при создании групп для ЦК.') {
         setStepStatus('error');
         eventSource.close();
       }
@@ -54,7 +54,7 @@ const VstuGroupMakerButton = () => {
       console.error('EventSource failed.');
       notification.error({
         message: 'Ошибка',
-        description: 'Произошла ошибка при выполнении парсера',
+        description: 'Произошла ошибка при создании групп для ЦК',
         placement: 'topLeft',
       });
       setStepStatus('error');
@@ -74,8 +74,8 @@ const VstuGroupMakerButton = () => {
       <Button icon={<PlayCircleOutlined />} onClick={handleClick} style={{ marginRight: 20 }}>Создать группы ЦК</Button>
       <Steps current={currentStep} status={stepStatus} className="custom-steps">
         <Step title="Ожидание запроса" icon={getIcon(0)} />
-        <Step title="Создание групп и расписания" icon={getIcon(1)} />
-        <Step title="Списки групп и расписание созданы" icon={getIcon(2)} />
+        <Step title="Создание групп" icon={getIcon(1)} />
+        <Step title="Списки групп созданы" icon={getIcon(2)} />
       </Steps>
     </div>
   );

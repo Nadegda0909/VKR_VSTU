@@ -18,15 +18,15 @@ const AnalyzePage = () => {
       <Title level={3}>Формирование</Title>
       <GroupParserButton />
       <Title level={3}>Группы цифровой кафедры</Title>
-      <Title level={4}>Для ВолгГТУ</Title>
+      {/*<Title level={4}>Для ВолгГТУ</Title>*/}
       <VstuGroupMakerButton />
-      <Title level={4}>Для остальных университетов</Title>
-      <OthersGroupMakerButton />
+      {/*<Title level={4}>Для остальных университетов</Title>*/}
+      {/*<OthersGroupMakerButton />*/}
       <Title level={3}>Расписание цифровой кафедры</Title>
-      <Title level={4}>Для ВолгГТУ</Title>
+      {/*<Title level={4}>Для ВолгГТУ</Title>*/}
       <CreateOnlyRaspVstu />
-      <Title level={4}>Для остальных университетов</Title>
-      <CreateOnlyRaspOthers />
+      {/*<Title level={4}>Для остальных университетов</Title>*/}
+      {/*<CreateOnlyRaspOthers />*/}
 
 
     </div>

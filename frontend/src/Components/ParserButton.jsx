@@ -54,7 +54,7 @@ const ParserButton = () => {
       console.error('EventSource failed.');
       notification.error({
         message: 'Ошибка',
-        description: 'Произошла ошибка при выполнении парсера',
+        description: 'Произошла ошибка при обработке расписания',
         placement: 'topLeft',
       });
       setStepStatus('error');

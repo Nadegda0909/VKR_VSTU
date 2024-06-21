@@ -39,12 +39,12 @@ const CreateOnlyRaspVstu = () => {
         setCurrentStep(4);
         notification.success({
           message: 'Успешно',
-          description: 'Расписание для ВолгГТУ создано!',
+          description: 'Расписание для ЦК создано!',
           placement: 'topLeft',
         });
         setStepStatus('finish');
         eventSource.close();
-      } else if (event.data === 'Ошибка при создании расписания для ВолгГТУ.') {
+      } else if (event.data === 'Ошибка при создании расписания для ЦК.') {
         setStepStatus('error');
         eventSource.close();
       }
@@ -54,7 +54,7 @@ const CreateOnlyRaspVstu = () => {
       console.error('EventSource failed.');
       notification.error({
         message: 'Ошибка',
-        description: 'Произошла ошибка при создании расписания для ВолгГТУ',
+        description: 'Произошла ошибка при создании расписания для ЦК',
         placement: 'topLeft',
       });
       setStepStatus('error');

@@ -39,12 +39,12 @@ const GroupParserButton = () => {
         setCurrentStep(4);
         notification.success({
           message: 'Успешно',
-          description: 'Парсер успешно завершен!',
+          description: 'Список студентов обработан!',
           placement: 'topLeft',
         });
         setStepStatus('finish');
         eventSource.close();
-      } else if (event.data === 'Ошибка при выполнении парсера.') {
+      } else if (event.data === 'Ошибка при обработке списка студентов.') {
         setStepStatus('error');
         eventSource.close();
       }
@@ -54,7 +54,7 @@ const GroupParserButton = () => {
       console.error('EventSource failed.');
       notification.error({
         message: 'Ошибка',
-        description: 'Произошла ошибка при выполнении парсера',
+        description: 'Произошла ошибка при обработке списка студентов',
         placement: 'topLeft',
       });
       setStepStatus('error');
