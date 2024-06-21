@@ -371,3 +371,69 @@ def download_file():
 def download_file():
     file_path = "work_with_ck_excel_rasp/group_ck.xlsx"  # Путь к файлу на сервере
     return FileResponse(path=file_path, filename="group_ck.xlsx", media_type='application/octet-stream')
+
+
+async def run_create_only_rasp_for_vstu(session_id: str):
+    session = json.loads(app.state.session_store.get(session_id, '{}'))
+    session['create_only_rasp_for_vstu_progress'] = 1
+    app.state.session_store[session_id] = json.dumps(session)
+    yield {"event": "message", "data": "Создается только расписание для ВолгГТУ..."}
+
+    # await asyncio.to_thread(run_create_only_rasp_for_vstu_from_file)
+    time.sleep(1)
+    session['create_only_rasp_for_vstu_progress'] = 4
+    app.state.session_store[session_id] = json.dumps(session)
+    yield {"event": "message", "data": "Расписание для ВолгГТУ создано."}
+
+
+@app.get("/api/run_create_only_rasp_for_vstu")
+async def run_create_only_rasp_for_vstu_endpoint(request: Request):
+    session_id = request.cookies.get("session")
+    if not session_id:
+        session_id = str(uuid.uuid4())
+        response = Response()
+        response.set_cookie(key="session", value=session_id)
+        app.state.session_store[session_id] = json.dumps({"create_only_rasp_for_vstu_progress": 0})
+        return response
+    return EventSourceResponse(run_create_only_rasp_for_vstu(session_id))
+
+
+@app.get("/api/create_only_rasp_for_vstu_progress")
+def get_create_only_rasp_for_vstu_progress(request: Request):
+    session_id = request.cookies.get("session")
+    session = json.loads(app.state.session_store.get(session_id, '{}'))
+    progress = session.get('create_only_rasp_for_vstu_progress', 0)
+    return {"create_only_rasp_for_vstu_progress": progress}
+
+
+async def run_create_only_rasp_for_others(session_id: str):
+    session = json.loads(app.state.session_store.get(session_id, '{}'))
+    session['create_only_rasp_for_others_progress'] = 1
+    app.state.session_store[session_id] = json.dumps(session)
+    yield {"event": "message", "data": "Создаются только расписание для остальных..."}
+
+    # await asyncio.to_thread(run_create_only_rasp_for_others_from_file)
+    time.sleep(1)
+    session['create_only_rasp_for_others_progress'] = 4
+    app.state.session_store[session_id] = json.dumps(session)
+    yield {"event": "message", "data": "Расписание для остальных создано."}
+
+
+@app.get("/api/run_create_only_rasp_for_others")
+async def run_create_only_rasp_for_others_endpoint(request: Request):
+    session_id = request.cookies.get("session")
+    if not session_id:
+        session_id = str(uuid.uuid4())
+        response = Response()
+        response.set_cookie(key="session", value=session_id)
+        app.state.session_store[session_id] = json.dumps({"create_only_rasp_for_others_progress": 0})
+        return response
+    return EventSourceResponse(run_create_only_rasp_for_others(session_id))
+
+
+@app.get("/api/create_only_rasp_for_others_progress")
+def get_create_only_rasp_for_others_progress(request: Request):
+    session_id = request.cookies.get("session")
+    session = json.loads(app.state.session_store.get(session_id, '{}'))
+    progress = session.get('create_only_rasp_for_others_progress', 0)
+    return {"create_only_rasp_for_others_progress": progress}

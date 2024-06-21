@@ -103,15 +103,17 @@ def create_schedule_for_new_groups(db, new_groups, all_free_intervals, max_lesso
             print(f"Warning: No free intervals found for new group {new_group_name}")
 
 
-if __name__ == "__main__":
+def run():
     t = time.time()
     db = PostgreSQLDatabase()
     db.connect()
-
     all_free_intervals = fetch_all_free_intervals(db)
     new_groups = fetch_new_groups(db)
     db.truncate_table('lesson_intervals_for_ck')
     create_schedule_for_new_groups(db, new_groups, all_free_intervals)
-
     db.disconnect()
     print("--- %s seconds --- create_schedule" % (time.time() - t))
+
+
+if __name__ == "__main__":
+    run()

@@ -5,18 +5,18 @@ import '../ParserButton.css';
 
 const { Step } = Steps;
 
-const VstuGroupMakerButton = () => {
+const CreateOnlyRaspOthers = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [stepStatus, setStepStatus] = useState('process');
 
   useEffect(() => {
-    fetch('/api/group_maker_vstu_progress')
+    fetch('/api/create_only_rasp_for_others_progress')
       .then(response => response.json())
       .then(data => {
-        setCurrentStep(data.group_maker_vstu_progress);
-        if (data.group_maker_vstu_progress === 4) {
+        setCurrentStep(data.create_only_rasp_for_others_progress);
+        if (data.create_only_rasp_for_others_progress === 4) {
           setStepStatus('finish');
-        } else if (data.group_maker_vstu_progress > 0) {
+        } else if (data.create_only_rasp_for_others_progress > 0) {
           setStepStatus('process');
         } else {
           setStepStatus('wait');
@@ -25,7 +25,7 @@ const VstuGroupMakerButton = () => {
   }, []);
 
   const handleClick = () => {
-    const eventSource = new EventSource('/api/run_group_maker_vstu');
+    const eventSource = new EventSource('/api/run_create_only_rasp_for_others');
 
     setCurrentStep(1); // Начат запуск парсера
     setStepStatus('process');
@@ -33,18 +33,18 @@ const VstuGroupMakerButton = () => {
     eventSource.onmessage = function(event) {
       console.log('Received:', event.data);
 
-      if (event.data === 'Создаются группы и расписание для ВолгГТУ...') {
+      if (event.data === 'Создаются только расписание для остальных...') {
         setCurrentStep(1);
-      } else if (event.data === 'Группы и расписание для ВолгГТУ созданы.') {
+      } else if (event.data === 'Расписание для остальных создано.') {
         setCurrentStep(4);
         notification.success({
           message: 'Успешно',
-          description: 'Группы и расписание для ВолгГТУ созданы!',
+          description: 'Расписание для остальных создано!',
           placement: 'topLeft',
         });
         setStepStatus('finish');
         eventSource.close();
-      } else if (event.data === 'Ошибка при создании групп и расписания для ВолгГТУ.') {
+      } else if (event.data === 'Ошибка при создании расписания для остальных.') {
         setStepStatus('error');
         eventSource.close();
       }
@@ -54,7 +54,7 @@ const VstuGroupMakerButton = () => {
       console.error('EventSource failed.');
       notification.error({
         message: 'Ошибка',
-        description: 'Произошла ошибка при выполнении парсера',
+        description: 'Произошла ошибка при создании расписания для остальных',
         placement: 'topLeft',
       });
       setStepStatus('error');
@@ -71,14 +71,14 @@ const VstuGroupMakerButton = () => {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center' }}>
-      <Button icon={<PlayCircleOutlined />} onClick={handleClick} style={{ marginRight: 20 }}>Создать группы ЦК</Button>
+      <Button icon={<PlayCircleOutlined />} onClick={handleClick} style={{ marginRight: 20 }}>Создать расписание ЦК</Button>
       <Steps current={currentStep} status={stepStatus} className="custom-steps">
         <Step title="Ожидание запроса" icon={getIcon(0)} />
-        <Step title="Создание групп и расписания" icon={getIcon(1)} />
-        <Step title="Списки групп и расписание созданы" icon={getIcon(2)} />
+        <Step title="Создание расписания" icon={getIcon(1)} />
+        <Step title="Расписание создано" icon={getIcon(2)} />
       </Steps>
     </div>
   );
 };
 
-export default VstuGroupMakerButton;
+export default CreateOnlyRaspOthers;

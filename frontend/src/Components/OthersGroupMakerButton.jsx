@@ -71,7 +71,7 @@ const OthersGroupMakerButton = () => {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center' }}>
-      <Button icon={<PlayCircleOutlined />} onClick={handleClick} style={{ marginRight: 20 }}>Создать группы и расписание ЦК для остальных университетов</Button>
+      <Button icon={<PlayCircleOutlined />} onClick={handleClick} style={{ marginRight: 20 }}>Создать группы ЦК</Button>
       <Steps current={currentStep} status={stepStatus} className="custom-steps">
         <Step title="Ожидание запроса" icon={getIcon(0)} />
         <Step title="Создание групп и расписания" icon={getIcon(1)} />

@@ -5,7 +5,7 @@ import axios from 'axios';
 
 const { Step } = Steps;
 
-const UploadButton = () => {
+const UploadCkStudentsButton = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [stepStatus, setStepStatus] = useState('process');
 
@@ -101,4 +101,4 @@ const UploadButton = () => {
   );
 };
 
-export default UploadButton;
+export default UploadCkStudentsButton;

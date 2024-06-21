@@ -71,7 +71,7 @@ const RaspCreatorButton = () => {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center' }}>
-      <Button icon={<PlayCircleOutlined />} onClick={handleClick} style={{ marginRight: 20 }}>Сформировать</Button>
+      <Button icon={<PlayCircleOutlined />} onClick={handleClick} style={{ marginRight: 20 }}>Сформировать Excel</Button>
       <Steps current={currentStep} status={stepStatus} className="custom-steps">
         <Step title="Ожидание запроса" icon={getIcon(0)} />
         <Step title="Создание Excel" icon={getIcon(1)} />

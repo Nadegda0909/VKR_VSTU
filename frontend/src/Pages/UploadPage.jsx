@@ -1,5 +1,5 @@
 import React from 'react';
-import UploadButton from '../Components/UploadButton';
+import UploadCkStudentsButton from '../Components/UploadCkStudentsButton';
 import { Typography } from 'antd';
 import DownloadButton from "../Components/DownloadButton";
 
@@ -17,7 +17,7 @@ const UploadPage = () => {
       </div>
       <Title level={3}>Список студентов</Title>
       <div style={{ display: 'flex' }}>
-        <UploadButton />
+        <UploadCkStudentsButton />
       </div>
     </div>
   );
